@@ -91,6 +91,7 @@
 
 		history = [...game.history()];
 		// todo: fix not updating
+		// todo: add castling and promotions
 	};
 
 	$: console.log(game.turn());
