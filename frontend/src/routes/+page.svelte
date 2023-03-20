@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Chess, type Color, type Square } from 'chess.js';
+	import { onMount } from 'svelte';
 
 	const decideColor = (x: number, y: number) => {
 		if (x % 2 == 0 && y % 2 == 0) {
@@ -84,7 +85,7 @@
 		if (takenPiece) {
 			if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
 			else move = `${piece}x${move}`;
-		} else if (piece != 'P' && !move.includes("O-O")) {
+		} else if (piece != 'P' && !move.includes('O-O')) {
 			move = piece + move;
 		}
 
@@ -96,20 +97,54 @@
 			if (!legalMoves.includes(String(game.history().at(-1)))) game.undo();
 
 			board = game.board();
-			takenPiece = null
+			takenPiece = null;
 
 			console.log(game.ascii());
-			
 		} catch (e) {
 			console.log(String(e));
 		}
 
 		history = [...game.history()];
 		// todo: fix not updating
-		// todo: add castling and promotions
+		// todo: add promotions
 	};
 
-	$: console.log(game.turn());
+	let isMounted = false;
+
+	onMount(() => {
+		isMounted = true;
+	});
+
+	const handleCheck = () => {
+		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
+		if (!kingImg?.parentElement) return;
+		const kingContainer = kingImg.parentElement;
+
+		if (!game.isCheck())
+			kingContainer.classList.remove(
+				'after:w-full',
+				'after:h-full',
+				'after:p-4',
+				'after:bg-red-600/50',
+				'after:rounded-full',
+				'after:blur-2xl',
+				'after:absolute'
+			);
+		else
+			kingContainer.classList.add(
+				'after:w-full',
+				'after:h-full',
+				'after:p-4',
+				'after:bg-red-600/50',
+				'after:rounded-full',
+				'after:blur-2xl',
+				'after:absolute'
+			);
+	};
+
+	$: if (board && isMounted) {
+		handleCheck();
+	}
 </script>
 
 <div
@@ -123,7 +158,7 @@
 					class={`${decideColor(
 						i,
 						j
-					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square`}
+					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
 					draggable="false"
 					on:dragover={(event) => {
 						event.preventDefault();
@@ -157,8 +192,9 @@
 						<img
 							src={`/pieces/${item.color}_${item.type}.svg`}
 							alt={item.type}
-							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece"
+							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece z-10"
 							draggable="true"
+							data-label={`${item.color}_${item.type}`}
 							on:dragstart={(event) => {
 								if (event.target instanceof HTMLImageElement) draggingPiece = event.target;
 							}}
