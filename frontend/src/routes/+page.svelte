@@ -16,7 +16,7 @@
 	const game = new Chess();
 
 	let history: string[] = [];
-	let board = game.board()
+	let board = game.board();
 
 	// todo: replace decidedColor with game.squareColor
 	// todo: redis for game sessions
@@ -66,25 +66,40 @@
 		};
 		if (piece == 'P') handleEnPassant(game.turn());
 
+		const handleCastling = (color: Color) => {
+			if (!draggingPiece.parentElement) return;
+
+			const squarePosition = square.id;
+			const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
+			if (color == 'w') {
+				if (squarePosition == 'g1' && legalMoves.includes('O-O')) {
+					move = 'O-O';
+				} else if (squarePosition == 'c1' && legalMoves.includes('O-O-O')) {
+					move = 'O-O-O';
+				}
+			}
+		};
+		if (piece == 'K') handleCastling(game.turn());
+
 		if (takenPiece) {
 			if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
 			else move = `${piece}x${move}`;
-		} else if (piece != 'P') {
+		} else if (piece != 'P' && !move.includes("O-O")) {
 			move = piece + move;
 		}
 
 		const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
 
 		try {
-			console.log(move);
-
 			game.move(move);
 
-			if (!legalMoves.includes(String(game.history().at(-1)))) game.undo()
+			if (!legalMoves.includes(String(game.history().at(-1)))) game.undo();
 
-			board = game.board()
+			board = game.board();
+			takenPiece = null
 
 			console.log(game.ascii());
+			
 		} catch (e) {
 			console.log(String(e));
 		}
