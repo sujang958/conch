@@ -19,6 +19,10 @@
 	let history: string[] = [];
 	let board = game.board();
 
+	let move = '';
+	let promotionWindow: HTMLDivElement;
+	let isPromoting = false;
+
 	// todo: replace decidedColor with game.squareColor
 	// todo: redis for game sessions
 	const onDrop = (
@@ -41,7 +45,7 @@
 
 		square.classList.remove('brightness-75');
 
-		let move = square.id;
+		move = square.id;
 
 		const handleEnPassant = (color: Color) => {
 			let toCalc = color == 'w' ? -1 : +1;
@@ -82,6 +86,24 @@
 		};
 		if (piece == 'K') handleCastling(game.turn());
 
+		// handlePromotion
+		const [alpahbet, number] = square.id.split('');
+		console.log(alpahbet, number, piece);
+		if (piece == 'P' && Number(number) == 8) {
+			// 97 is a
+			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`;
+
+			if (takenPiece) {
+				if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
+			}
+
+			move += '=';
+
+			isPromoting = true;
+
+			return;
+		}
+
 		if (takenPiece) {
 			if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
 			else move = `${piece}x${move}`;
@@ -91,22 +113,9 @@
 
 		const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
 
-		try {
-			game.move(move);
+		movePiece(legalMoves);
 
-			if (!legalMoves.includes(String(game.history().at(-1)))) game.undo();
-
-			board = game.board();
-			takenPiece = null;
-
-			console.log(game.ascii());
-		} catch (e) {
-			console.log(String(e));
-		}
-
-		history = [...game.history()];
-		// todo: fix not updating
-		// todo: add promotions
+		takenPiece = null;
 	};
 
 	let isMounted = false;
@@ -114,6 +123,43 @@
 	onMount(() => {
 		isMounted = true;
 	});
+
+	const finishPromoting = (promoteTo: string) => {
+		if (!isPromoting) return;
+		if (!draggingPiece.parentElement) return;
+
+		const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
+
+		move += promoteTo;
+
+		if (movePiece(legalMoves)) {
+			isPromoting = false;
+		}
+	};
+
+	const movePiece = (legalMoves: string[]): boolean => {
+		try {
+			game.move(move);
+
+			if (!legalMoves.includes(String(game.history().at(-1)))) {
+				game.undo();
+
+				return false;
+			}
+
+			board = game.board();
+
+			console.log(game.ascii());
+
+			return true;
+		} catch (e) {
+			console.log(String(e));
+
+			return false;
+		} finally {
+			history = [...game.history()];
+		}
+	};
 
 	const handleCheck = () => {
 		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
@@ -145,12 +191,79 @@
 	$: if (board && isMounted) {
 		handleCheck();
 	}
+
+	$: if (promotionWindow) {
+		if (isPromoting) {
+			promotionWindow.style.display = 'grid';
+		} else {
+			promotionWindow.style.display = 'none';
+		}
+	}
 </script>
 
 <div
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-900 text-white py-6 gap-x-8"
 >
-	<div draggable="false" class="w-[85vh] h-[85vh] bg-black select-none grid grid-cols-8">
+	<!-- todo: try using min() function vh vw -->
+	<div draggable="false" class="w-[85vh] h-[85vh] bg-black select-none grid grid-cols-8 relative">
+		<!-- one square per 12.5% -->
+		<div
+			class="absolute bottom-3/4 w-1/4 left-[12.5%] top-0 bg-white rounded z-50 hidden grid-cols-2 gap-3 p-2"
+			bind:this={promotionWindow}
+		>
+			<button
+				on:click={() => {
+					finishPromoting('Q');
+				}}
+				class="rounded transition duration-100 hover:bg-black/5"
+			>
+				<img
+					src="/pieces/w_q.svg"
+					alt="Queen"
+					class="object-contain w-full cursor-pointer"
+					draggable="false"
+				/>
+			</button>
+			<button
+				on:click={() => {
+					finishPromoting('N');
+				}}
+				class="rounded transition duration-100 hover:bg-black/5"
+			>
+				<img
+					src="/pieces/w_n.svg"
+					alt="Knight"
+					class="object-contain w-full cursor-pointer"
+					draggable="false"
+				/>
+			</button>
+			<button
+				on:click={() => {
+					finishPromoting('B');
+				}}
+				class="rounded transition duration-100 hover:bg-black/5"
+			>
+				<img
+					src="/pieces/w_b.svg"
+					alt="Bishop"
+					class="object-contain w-full cursor-pointer"
+					draggable="false"
+				/>
+			</button>
+			<button
+				on:click={() => {
+					finishPromoting('R');
+				}}
+				class="rounded transition duration-100 hover:bg-black/5"
+			>
+				<img
+					src="/pieces/w_r.svg"
+					alt="Rook"
+					class="object-contain w-full cursor-pointer"
+					draggable="false"
+				/>
+			</button>
+		</div>
 		{#each board as row, i}
 			{#each row as item, j}
 				<div
@@ -195,6 +308,15 @@
 							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece z-10"
 							draggable="true"
 							data-label={`${item.color}_${item.type}`}
+							on:mousedown={(event) => {
+								// if (!(event.target instanceof HTMLImageElement)) return;
+								// console.log(event.clientX, event.clientY);
+								// const piece = event.target;
+								// const rect = piece.getBoundingClientRect();
+								// console.log(rect);
+								// piece.classList.add('transition', 'duration-100');
+								// piece.style.transform = `translate(${rect.width / 2}px, ${-rect.height / 2}px)`;
+							}}
 							on:dragstart={(event) => {
 								if (event.target instanceof HTMLImageElement) draggingPiece = event.target;
 							}}
