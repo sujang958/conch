@@ -23,6 +23,19 @@
 	let promotionWindow: HTMLDivElement;
 	let isPromoting = false;
 
+	let castleAudio: HTMLAudioElement;
+	let moveAudio: HTMLAudioElement;
+	let takeAudio: HTMLAudioElement;
+
+	const playSound = (audio: HTMLAudioElement) => {
+		if (!audio.paused) {
+			audio.currentTime = 0;
+			audio.play();
+		} else {
+			audio.play();
+		}
+	};
+
 	// todo: replace decidedColor with game.squareColor
 	// todo: redis for game sessions
 	const onDrop = (
@@ -122,6 +135,10 @@
 
 	onMount(() => {
 		isMounted = true;
+
+		takeAudio = new Audio('/sounds/take.aac');
+		castleAudio = new Audio('/sounds/castle.aac');
+		moveAudio = new Audio('/sounds/move.aac');
 	});
 
 	const finishPromoting = (promoteTo: string) => {
@@ -147,6 +164,16 @@
 				return false;
 			}
 
+			if (move.includes('x')) {
+				playSound(takeAudio);
+			} else if (move.includes('O-O')) {
+				// playSound(castleAudio);
+				playSound(moveAudio);
+				setTimeout(() => {
+					playSound(moveAudio);
+				}, 100);
+			} else playSound(moveAudio);
+
 			board = game.board();
 
 			console.log(game.ascii());
@@ -161,36 +188,57 @@
 		}
 	};
 
-	const handleCheck = () => {
-		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
-		if (!kingImg?.parentElement) return;
-		const kingContainer = kingImg.parentElement;
+	// const handleCheck = () => {
+	// 	const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
+	// 	const opponentKingImg = document.querySelector(
+	// 		`[data-label="${game.turn() == 'w' ? 'b' : 'k'}_k"]`
+	// 	);
+	// 	if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return;
+	// 	const kingContainer = kingImg.parentElement;
+	// 	const opponentKingContainer = opponentKingImg.parentElement;
 
-		if (!game.isCheck())
-			kingContainer.classList.remove(
-				'after:w-full',
-				'after:h-full',
-				'after:p-4',
-				'after:bg-red-600/50',
-				'after:rounded-full',
-				'after:blur-2xl',
-				'after:absolute'
-			);
-		else
-			kingContainer.classList.add(
-				'after:w-full',
-				'after:h-full',
-				'after:p-4',
-				'after:bg-red-600/50',
-				'after:rounded-full',
-				'after:blur-2xl',
-				'after:absolute'
-			);
-	};
+	// 	console.log(kingImg);
+	// 	game.
 
-	$: if (board && isMounted) {
-		handleCheck();
-	}
+	// 	if (game.isCheck()) {
+	// 		kingContainer.classList.add(
+	// 			'after:w-full',
+	// 			'after:h-full',
+	// 			'after:p-4',
+	// 			'after:bg-red-600/50',
+	// 			'after:rounded-full',
+	// 			'after:blur-2xl',
+	// 			'after:absolute'
+	// 		);
+
+	// 		return
+	// 	} else {
+	// 		opponentKingContainer.classList.remove(
+	// 			'after:w-full',
+	// 			'after:h-full',
+	// 			'after:p-4',
+	// 			'after:bg-red-600/50',
+	// 			'after:rounded-full',
+	// 			'after:blur-2xl',
+	// 			'after:absolute'
+	// 		);
+	// 		kingContainer.classList.remove(
+	// 			'after:w-full',
+	// 			'after:h-full',
+	// 			'after:p-4',
+	// 			'after:bg-red-600/50',
+	// 			'after:rounded-full',
+	// 			'after:blur-2xl',
+	// 			'after:absolute'
+	// 		);
+
+	// 		return
+	// 	}
+	// };
+
+	// $: if (board && isMounted) {
+	// 	handleCheck();
+	// }
 
 	$: if (promotionWindow) {
 		if (isPromoting) {
@@ -308,15 +356,6 @@
 							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece z-10"
 							draggable="true"
 							data-label={`${item.color}_${item.type}`}
-							on:mousedown={(event) => {
-								// if (!(event.target instanceof HTMLImageElement)) return;
-								// console.log(event.clientX, event.clientY);
-								// const piece = event.target;
-								// const rect = piece.getBoundingClientRect();
-								// console.log(rect);
-								// piece.classList.add('transition', 'duration-100');
-								// piece.style.transform = `translate(${rect.width / 2}px, ${-rect.height / 2}px)`;
-							}}
 							on:dragstart={(event) => {
 								if (event.target instanceof HTMLImageElement) draggingPiece = event.target;
 							}}
