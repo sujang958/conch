@@ -188,57 +188,55 @@
 		}
 	};
 
-	// const handleCheck = () => {
-	// 	const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
-	// 	const opponentKingImg = document.querySelector(
-	// 		`[data-label="${game.turn() == 'w' ? 'b' : 'k'}_k"]`
-	// 	);
-	// 	if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return;
-	// 	const kingContainer = kingImg.parentElement;
-	// 	const opponentKingContainer = opponentKingImg.parentElement;
+	const handleCheck = () => {
+		console.log("YO")
+		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
+		const opponentKingImg = document.querySelector(
+			`[data-label="${game.turn() == 'w' ? 'b' : 'w'}_k"]`
+		);
+		if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return;
+		const kingContainer = kingImg.parentElement;
+		const opponentKingContainer = opponentKingImg.parentElement;
 
-	// 	console.log(kingImg);
-	// 	game.
+		if (game.isCheck()) {
+			kingContainer.classList.add(
+				'after:w-full',
+				'after:h-full',
+				'after:p-4',
+				'after:bg-red-600/50',
+				'after:rounded-full',
+				'after:blur-2xl',
+				'after:absolute'
+			);
 
-	// 	if (game.isCheck()) {
-	// 		kingContainer.classList.add(
-	// 			'after:w-full',
-	// 			'after:h-full',
-	// 			'after:p-4',
-	// 			'after:bg-red-600/50',
-	// 			'after:rounded-full',
-	// 			'after:blur-2xl',
-	// 			'after:absolute'
-	// 		);
+			return;
+		} else {
+			opponentKingContainer.classList.remove(
+				'after:w-full',
+				'after:h-full',
+				'after:p-4',
+				'after:bg-red-600/50',
+				'after:rounded-full',
+				'after:blur-2xl',
+				'after:absolute'
+			);
+			kingContainer.classList.remove(
+				'after:w-full',
+				'after:h-full',
+				'after:p-4',
+				'after:bg-red-600/50',
+				'after:rounded-full',
+				'after:blur-2xl',
+				'after:absolute'
+			);
 
-	// 		return
-	// 	} else {
-	// 		opponentKingContainer.classList.remove(
-	// 			'after:w-full',
-	// 			'after:h-full',
-	// 			'after:p-4',
-	// 			'after:bg-red-600/50',
-	// 			'after:rounded-full',
-	// 			'after:blur-2xl',
-	// 			'after:absolute'
-	// 		);
-	// 		kingContainer.classList.remove(
-	// 			'after:w-full',
-	// 			'after:h-full',
-	// 			'after:p-4',
-	// 			'after:bg-red-600/50',
-	// 			'after:rounded-full',
-	// 			'after:blur-2xl',
-	// 			'after:absolute'
-	// 		);
+			return;
+		}
+	};
 
-	// 		return
-	// 	}
-	// };
-
-	// $: if (board && isMounted) {
-	// 	handleCheck();
-	// }
+	$: if (board && isMounted) {
+		handleCheck();
+	}
 
 	$: if (promotionWindow) {
 		if (isPromoting) {
@@ -247,6 +245,8 @@
 			promotionWindow.style.display = 'none';
 		}
 	}
+
+	// todo: sepearte into several files
 </script>
 
 <div
