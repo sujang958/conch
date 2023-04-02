@@ -36,8 +36,8 @@
 		}
 	};
 
-	// todo: replace decidedColor with game.squareColor
-	// todo: redis for game sessions
+	// TODO: replace decidedColor with game.squareColor
+	// TODO: redis for game sessions
 	const onDrop = (
 		event: DragEvent & {
 			currentTarget: EventTarget & HTMLDivElement;
@@ -101,9 +101,7 @@
 
 		// handlePromotion
 		const [alpahbet, number] = square.id.split('');
-		console.log(alpahbet, number, piece);
 		if (piece == 'P' && Number(number) == 8) {
-			// 97 is a
 			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`;
 
 			if (takenPiece) {
@@ -246,13 +244,14 @@
 		}
 	}
 
-	// todo: sepearte into several files
+	// TODO: sepearte into several files
+	// TODO: implement castling and promotions for black
 </script>
 
 <div
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-900 text-white py-6 gap-x-8"
 >
-	<!-- todo: try using min() function vh vw -->
+	<!-- TODO: try using min() function vh vw -->
 	<div draggable="false" class="w-[85vh] h-[85vh] bg-black select-none grid grid-cols-8 relative">
 		<!-- one square per 12.5% -->
 		<div
