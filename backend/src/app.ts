@@ -1,16 +1,8 @@
 import Fastify from "fastify"
 import WebsocketPlugin from "@fastify/websocket"
 import { EventModel } from "./models/event"
-import { config } from "dotenv"
-import { createClient } from "redis"
 import events from "./events"
-
-config()
-
-const redisClient = createClient({
-  password: process.env.REDIS_PW,
-  url: process.env.REDIS_URL,
-})
+import { redisClient } from "./db/redis"
 
 const fastify = Fastify({
   logger: true,

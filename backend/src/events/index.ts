@@ -11,9 +11,17 @@ for (const filename of readdirSync(join(__dirname, "./")).filter((name) =>
   const handlerFile = EventHandler.safeParse(file)
 
   if (!handlerFile.success) {
-    console.log("Couldn't load an event named", filename)
+    console.warn("Couldn't load an event named", filename)
 
     continue
+  }
+  if (events.has(handlerFile.data.name)) {
+    console.warn(
+      "Duplicated event handler",
+      handlerFile.data.name,
+      "in",
+      filename
+    )
   }
 
   events.set(handlerFile.data.name, handlerFile.data)
