@@ -1,247 +1,173 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { trpc } from '$lib/trpc/client';
-	import { Chess, type Color, type Square } from 'chess.js';
-	import { onMount } from 'svelte';
+	import { Chess, type Color, type Square } from "chess.js"
+	import { onMount } from "svelte"
 
 	const decideColor = (x: number, y: number) => {
 		if (x % 2 == 0 && y % 2 == 0) {
-			return 'bg-[#769656]';
+			return "bg-[#769656]"
 		} else if (y % 2 !== 0 && x % 2 !== 0) {
-			return 'bg-[#769656]';
+			return "bg-[#769656]"
 		} else {
-			return 'bg-[#eeeed2]';
+			return "bg-[#eeeed2]"
 		}
-	};
+	}
 
-	let draggingPiece: HTMLImageElement;
+	let draggingPiece: HTMLImageElement
 
-	const game = new Chess();
+	const game = new Chess()
 
-	let history: string[] = [];
-	let board = game.board();
+	let history: string[] = []
+	let board = game.board()
 
-	let move = '';
-	let promotionWindow: HTMLDivElement;
-	let isPromoting = false;
+	let move: Exclude<Parameters<typeof game.move>[0], string> = { from: "", to: "" }
+	let promotionWindow: HTMLDivElement
+	let isPromoting = false
 
-	let castleAudio: HTMLAudioElement;
-	let moveAudio: HTMLAudioElement;
-	let takeAudio: HTMLAudioElement;
+	let castleAudio: HTMLAudioElement
+	let moveAudio: HTMLAudioElement
+	let takeAudio: HTMLAudioElement
 
 	const playSound = (audio: HTMLAudioElement) => {
 		if (!audio.paused) {
-			audio.currentTime = 0;
-			audio.play();
+			audio.currentTime = 0
+			audio.play()
 		} else {
-			audio.play();
+			audio.play()
 		}
-	};
+	}
 
 	// TODO: replace decidedColor with game.squareColor
 	// TODO: redis for game sessions
 	const onDrop = (
 		event: DragEvent & {
-			currentTarget: EventTarget & HTMLDivElement;
+			currentTarget: EventTarget & HTMLDivElement
 		}
 	) => {
-		event.preventDefault();
+		event.preventDefault()
 
-		if (!draggingPiece.parentElement) return;
-		if (!(event.target instanceof HTMLElement)) return;
-		if (!event.target.parentElement) return;
-		if (!(event.target.classList.contains('square') || event.target.classList.contains('piece')))
-			return;
+		if (!draggingPiece.parentElement) return
+		if (!(event.target instanceof HTMLElement)) return
+		if (!event.target.parentElement) return
+		if (!(event.target.classList.contains("square") || event.target.classList.contains("piece")))
+			return
 
-		const square =
-			event.target instanceof HTMLDivElement ? event.target : event.target.parentElement;
-		let takenPiece = event.target instanceof HTMLImageElement ? event.target : null;
-		const piece = draggingPiece.alt.toUpperCase();
+		const targetSquare =
+			event.target instanceof HTMLDivElement ? event.target : event.target.parentElement
+		const draggingPieceNotation = draggingPiece.alt.toUpperCase()
 
-		square.classList.remove('brightness-75');
+		targetSquare.classList.remove("brightness-75")
 
-		move = square.id;
+		move.from = draggingPiece.parentElement.id
+		move.to = targetSquare.id
 
-		const handleEnPassant = (color: Color) => {
-			let toCalc = color == 'w' ? -1 : +1;
+		// Handling promotions
+		const [alpahbet, number] = targetSquare.id.trim().split("")
+		if (draggingPieceNotation == "P" && Number(number) == 8) {
+			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`
 
-			const squarePositonFactor = square.id.split('');
-			const enPassantPosition = `${squarePositonFactor[0]}${
-				Number(square.id.split('')[1]) + toCalc
-			}`;
+			isPromoting = true
 
-			const enPassantPiece = game.get(enPassantPosition as Square);
-
-			if (!(enPassantPiece.type == 'p' && enPassantPiece.color != color)) return;
-
-			const enPassantPositionSquare = document.getElementById(enPassantPosition);
-
-			if (!(enPassantPositionSquare instanceof HTMLDivElement)) return;
-
-			const enPassantImage = enPassantPositionSquare.children.item(0);
-
-			if (!(enPassantImage instanceof HTMLImageElement)) return;
-
-			takenPiece = enPassantImage;
-		};
-		if (piece == 'P') handleEnPassant(game.turn());
-
-		const handleCastling = (color: Color) => {
-			if (!draggingPiece.parentElement) return;
-
-			const squarePosition = square.id;
-			const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
-			if (color == 'w') {
-				if (squarePosition == 'g1' && legalMoves.includes('O-O')) {
-					move = 'O-O';
-				} else if (squarePosition == 'c1' && legalMoves.includes('O-O-O')) {
-					move = 'O-O-O';
-				}
-			}
-		};
-		if (piece == 'K') handleCastling(game.turn());
-
-		// handlePromotion
-		const [alpahbet, number] = square.id.split('');
-		if (piece == 'P' && Number(number) == 8) {
-			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`;
-
-			if (takenPiece) {
-				if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
-			}
-
-			move += '=';
-
-			isPromoting = true;
-
-			return;
+			return
 		}
 
-		if (takenPiece) {
-			if (piece == 'P') move = draggingPiece.parentElement.id.split('')[0] + `x${move}`;
-			else move = `${piece}x${move}`;
-		} else if (piece != 'P' && !move.includes('O-O')) {
-			move = piece + move;
-		}
+		movePiece()
+	}
 
-		const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
-
-		movePiece(legalMoves);
-
-		takenPiece = null;
-	};
-
-	let isMounted = false;
+	let isMounted = false
 
 	onMount(() => {
-		isMounted = true;
+		isMounted = true
 
-		takeAudio = new Audio('/sounds/take.aac');
-		castleAudio = new Audio('/sounds/castle.aac');
-		moveAudio = new Audio('/sounds/move.aac');
-	});
+		takeAudio = new Audio("/sounds/take.aac")
+		castleAudio = new Audio("/sounds/castle.aac")
+		moveAudio = new Audio("/sounds/move.aac")
+	})
 
 	const finishPromoting = (promoteTo: string) => {
-		if (!isPromoting) return;
-		if (!draggingPiece.parentElement) return;
+		if (!isPromoting) return
+		if (!draggingPiece.parentElement) return
 
-		const legalMoves = game.moves({ square: draggingPiece.parentElement.id as Square });
+		move.promotion = promoteTo
 
-		move += promoteTo;
+		if (movePiece()) isPromoting = false
+	}
 
-		if (movePiece(legalMoves)) {
-			isPromoting = false;
-		}
-	};
-
-	const movePiece = (legalMoves: string[]): boolean => {
+	const movePiece = (): boolean => {
 		try {
-			game.move(move);
+			const { san } = game.move(move)
 
-			if (!legalMoves.includes(String(game.history().at(-1)))) {
-				game.undo();
+			if (san.includes("x")) playSound(takeAudio)
+			else if (san.includes("O-O")) {
+				playSound(moveAudio)
+				setTimeout(playSound.bind(null, moveAudio), 50)
+			} else playSound(moveAudio)
 
-				return false;
-			}
+			board = game.board()
 
-			if (move.includes('x')) {
-				playSound(takeAudio);
-			} else if (move.includes('O-O')) {
-				// playSound(castleAudio);
-				playSound(moveAudio);
-				setTimeout(() => {
-					playSound(moveAudio);
-				}, 100);
-			} else playSound(moveAudio);
-
-			board = game.board();
-
-			console.log(game.ascii());
-
-			return true;
+			return true
 		} catch (e) {
-			console.log(String(e));
+			console.log(String(e))
 
-			return false;
+			return false
 		} finally {
-			history = [...game.history()];
+			history = [...game.history()]
 		}
-	};
+	}
 
 	const handleCheck = () => {
-		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
+		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`)
 		const opponentKingImg = document.querySelector(
-			`[data-label="${game.turn() == 'w' ? 'b' : 'w'}_k"]`
-		);
-		if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return;
-		const kingContainer = kingImg.parentElement;
-		const opponentKingContainer = opponentKingImg.parentElement;
+			`[data-label="${game.turn() == "w" ? "b" : "w"}_k"]`
+		)
+		if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return
+		const kingContainer = kingImg.parentElement
+		const opponentKingContainer = opponentKingImg.parentElement
 
 		if (game.isCheck()) {
 			kingContainer.classList.add(
-				'after:w-full',
-				'after:h-full',
-				'after:p-4',
-				'after:bg-red-600/50',
-				'after:rounded-full',
-				'after:blur-2xl',
-				'after:absolute'
-			);
+				"after:w-full",
+				"after:h-full",
+				"after:p-4",
+				"after:bg-red-600/50",
+				"after:rounded-full",
+				"after:blur-2xl",
+				"after:absolute"
+			)
 
-			return;
+			return
 		} else {
 			opponentKingContainer.classList.remove(
-				'after:w-full',
-				'after:h-full',
-				'after:p-4',
-				'after:bg-red-600/50',
-				'after:rounded-full',
-				'after:blur-2xl',
-				'after:absolute'
-			);
+				"after:w-full",
+				"after:h-full",
+				"after:p-4",
+				"after:bg-red-600/50",
+				"after:rounded-full",
+				"after:blur-2xl",
+				"after:absolute"
+			)
 			kingContainer.classList.remove(
-				'after:w-full',
-				'after:h-full',
-				'after:p-4',
-				'after:bg-red-600/50',
-				'after:rounded-full',
-				'after:blur-2xl',
-				'after:absolute'
-			);
+				"after:w-full",
+				"after:h-full",
+				"after:p-4",
+				"after:bg-red-600/50",
+				"after:rounded-full",
+				"after:blur-2xl",
+				"after:absolute"
+			)
 
-			return;
+			return
 		}
-	};
+	}
 
 	$: if (board && isMounted) {
-		handleCheck();
+		handleCheck()
 	}
 
 	$: if (promotionWindow) {
 		if (isPromoting) {
-			promotionWindow.style.display = 'grid';
+			promotionWindow.style.display = "grid"
 		} else {
-			promotionWindow.style.display = 'none';
+			promotionWindow.style.display = "none"
 		}
 	}
 
@@ -261,7 +187,7 @@
 		>
 			<button
 				on:click={() => {
-					finishPromoting('Q');
+					finishPromoting("Q")
 				}}
 				class="rounded transition duration-100 hover:bg-black/5"
 			>
@@ -274,7 +200,7 @@
 			</button>
 			<button
 				on:click={() => {
-					finishPromoting('N');
+					finishPromoting("N")
 				}}
 				class="rounded transition duration-100 hover:bg-black/5"
 			>
@@ -287,7 +213,7 @@
 			</button>
 			<button
 				on:click={() => {
-					finishPromoting('B');
+					finishPromoting("B")
 				}}
 				class="rounded transition duration-100 hover:bg-black/5"
 			>
@@ -300,7 +226,7 @@
 			</button>
 			<button
 				on:click={() => {
-					finishPromoting('R');
+					finishPromoting("R")
 				}}
 				class="rounded transition duration-100 hover:bg-black/5"
 			>
@@ -322,31 +248,31 @@
 					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
 					draggable="false"
 					on:dragover={(event) => {
-						event.preventDefault();
+						event.preventDefault()
 
-						if (!(event.target instanceof HTMLElement)) return;
+						if (!(event.target instanceof HTMLElement)) return
 
-						let target = event.target;
+						let target = event.target
 
-						if (!target.parentElement) return;
-						if (!(target instanceof HTMLDivElement)) target = target.parentElement;
+						if (!target.parentElement) return
+						if (!(target instanceof HTMLDivElement)) target = target.parentElement
 
-						target.classList.add('brightness-75');
+						target.classList.add("brightness-75")
 					}}
 					on:dragleave={(event) => {
-						event.preventDefault();
+						event.preventDefault()
 
-						if (!(event.target instanceof HTMLElement)) return;
+						if (!(event.target instanceof HTMLElement)) return
 
-						let target = event.target;
+						let target = event.target
 
-						if (!target.parentElement) return;
-						if (!(target instanceof HTMLDivElement)) target = target.parentElement;
+						if (!target.parentElement) return
+						if (!(target instanceof HTMLDivElement)) target = target.parentElement
 
-						target.classList.remove('brightness-75');
+						target.classList.remove("brightness-75")
 					}}
 					on:drop={(event) => {
-						onDrop(event);
+						onDrop(event)
 					}}
 				>
 					{#if item}
@@ -357,7 +283,7 @@
 							draggable="true"
 							data-label={`${item.color}_${item.type}`}
 							on:dragstart={(event) => {
-								if (event.target instanceof HTMLImageElement) draggingPiece = event.target;
+								if (event.target instanceof HTMLImageElement) draggingPiece = event.target
 							}}
 						/>
 					{/if}
