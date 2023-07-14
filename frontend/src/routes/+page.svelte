@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import { trpc } from '$lib/trpc/client';
 	import { Chess, type Color, type Square } from 'chess.js';
 	import { onMount } from 'svelte';
 
@@ -187,7 +189,6 @@
 	};
 
 	const handleCheck = () => {
-		console.log("YO")
 		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`);
 		const opponentKingImg = document.querySelector(
 			`[data-label="${game.turn() == 'w' ? 'b' : 'w'}_k"]`

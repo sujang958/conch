@@ -3,7 +3,6 @@ import { createClient } from "redis"
 
 config()
 
-export const redisClient = createClient({
-  password: process.env.REDIS_PW,
+export const dbClient = createClient({
   url: process.env.REDIS_URL,
 })

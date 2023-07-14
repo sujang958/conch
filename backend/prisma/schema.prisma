@@ -6,12 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "cockroachdb"
   url      = env("DB_URL")
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
+  id    BigInt     @id @default(autoincrement())
   picture String
   bio String
   elo Int
@@ -22,17 +22,17 @@ model User {
 }
 
 model Game {
-  id    Int     @id @default(autoincrement())
+  id    BigInt     @id @default(autoincrement())
   fan String
   startedAt DateTime @default(now())
 
   white   User   @relation("white", fields: [whiteId], references: [id])
   black   User   @relation("black", fields: [blackId], references: [id])
-  whiteId Int
-  blackId Int
+  whiteId BigInt
+  blackId BigInt
 
   winner User @relation("won", fields: [winnerId], references: [id])
-  winnerId Int
+  winnerId BigInt
 }
 
 

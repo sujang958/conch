@@ -1,37 +1,30 @@
 import Fastify from "fastify"
 import WebsocketPlugin from "@fastify/websocket"
-import { EventModel } from "./models/event"
-import events from "./events"
-import { redisClient } from "./db/redis"
+import { dbClient } from "./db/redis"
+import setupWebsocket from "./ws"
+import setupGraphQL from "./gql"
+
+const PORT = Number(process.env.PORT)
 
 const fastify = Fastify({
   logger: true,
 })
 
-fastify.register(WebsocketPlugin, { options: { maxPayload: 1048576 } })
+fastify.register(WebsocketPlugin)
+fastify.register(setupWebsocket)
 
-fastify.register(async function (fastify) {
-  fastify.get("/ws", { websocket: true }, (connection, req) => {
-    connection.socket.on("message", (message) => {
-      try {
-        const decodedMessage = JSON.parse(message.toString())
-        const event = EventModel.parse(decodedMessage)
-
-        events.get(event.type)?.handle(event.payload)
-      } catch (e) {
-        console.log(e)
-      }
-    })
-  })
-})
+setupGraphQL(fastify)
 
 const main = async () => {
-  await redisClient.connect()
+  // await dbClient.connect()
 
-  fastify.listen({ port: 3000 }, (err, address) => {
-    if (err) throw err
-    console.log(`Server is now listening on ${address}`)
-  })
+  try {
+    const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
+    console.log(res)
+  } catch (err) {
+    fastify.log.error(err)
+    process.exit(1)
+  }
 }
 
 main()
