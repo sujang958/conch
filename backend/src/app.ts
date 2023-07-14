@@ -3,6 +3,9 @@ import WebsocketPlugin from "@fastify/websocket"
 import { dbClient } from "./db/redis"
 import setupWebsocket from "./ws"
 import setupGraphQL from "./gql"
+import { config } from "dotenv"
+
+config()
 
 const PORT = Number(process.env.PORT)
 

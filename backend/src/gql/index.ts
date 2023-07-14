@@ -9,7 +9,10 @@ const schema = `
 
 const resolvers: IResolvers = {
   Query: {
-    hello: async () => "there",
+    hello: async (_, args) => {
+      console.log(args)
+      return "fuck you"
+    },
   },
 }
 
@@ -18,7 +21,6 @@ const setupGraphQL = (fastify: FastifyInstance) => {
     schema,
     resolvers,
     context: (req, res) => ({ req, res }),
-    graphiql: process.env.NODE_ENV == "development",
     path: "/graphql",
   })
 }
