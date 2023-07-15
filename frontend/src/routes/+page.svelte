@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { getSquare } from "$lib/board"
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
 
+	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
 		if (x % 2 == 0 && y % 2 == 0) {
 			return "bg-[#769656]"
@@ -37,7 +39,6 @@
 		}
 	}
 
-	// TODO: replace decidedColor with game.squareColor
 	const onDrop = (targetSquare: HTMLDivElement) => {
 		if (!draggingPiece) return
 		if (!draggingPiece.parentElement) return
@@ -72,23 +73,17 @@
 		moveAudio = new Audio("/sounds/move.aac")
 
 		document.addEventListener("mouseup", (event) => {
-			let targetSquare = event.target
-
 			if (!draggingPiece) return
-			if (!(targetSquare instanceof HTMLElement)) return
-			if (!targetSquare.classList.contains("square") && !targetSquare.classList.contains("piece"))
-				return
-			if (
-				targetSquare instanceof HTMLImageElement &&
-				targetSquare.parentElement &&
-				targetSquare.parentElement instanceof HTMLDivElement
-			)
-				targetSquare = targetSquare.parentElement
-			if (!(targetSquare instanceof HTMLDivElement)) return
+
+			const targetSquare = getSquare(event.target)
+
+			if (!targetSquare) return
 
 			onDrop(targetSquare)
 			draggingPieceCopy?.remove()
 			draggingPiece.parentElement?.classList.remove("brightness-75")
+			draggingPiece = null
+			draggingPieceCopy = null
 		})
 		document.addEventListener("mousemove", (event) => {
 			if (!draggingPiece || !draggingPieceCopy) return
@@ -97,6 +92,8 @@
 			draggingPieceCopy.style.left = `${event.clientX}px`
 		})
 	})
+
+	// TODO: fix errors on promoting g5 h6 gxh6 g6 h6xg6 f5 g7 f4 can't promote
 
 	const finishPromoting = (promoteTo: string) => {
 		if (!isPromoting) return
@@ -262,6 +259,18 @@
 						j
 					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
 					draggable="false"
+					on:mouseenter={(event) => {
+						if (!draggingPiece) return
+
+						const square = getSquare(event.target)
+						square?.classList.add("brightness-75")
+					}}
+					on:mouseleave={(event) => {
+						if (!draggingPiece) return
+
+						const square = getSquare(event.target)
+						square?.classList.remove("brightness-75")
+					}}
 				>
 					{#if item}
 						<img
