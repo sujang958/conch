@@ -12,7 +12,8 @@
 		}
 	}
 
-	let draggingPiece: HTMLImageElement
+	let draggingPiece: HTMLImageElement | null = null
+	let draggingPieceCopy: HTMLImageElement | null = null
 
 	const game = new Chess()
 
@@ -37,22 +38,10 @@
 	}
 
 	// TODO: replace decidedColor with game.squareColor
-	// TODO: redis for game sessions
-	const onDrop = (
-		event: DragEvent & {
-			currentTarget: EventTarget & HTMLDivElement
-		}
-	) => {
-		event.preventDefault()
-
+	const onDrop = (targetSquare: HTMLDivElement) => {
+		if (!draggingPiece) return
 		if (!draggingPiece.parentElement) return
-		if (!(event.target instanceof HTMLElement)) return
-		if (!event.target.parentElement) return
-		if (!(event.target.classList.contains("square") || event.target.classList.contains("piece")))
-			return
 
-		const targetSquare =
-			event.target instanceof HTMLDivElement ? event.target : event.target.parentElement
 		const draggingPieceNotation = draggingPiece.alt.toUpperCase()
 
 		targetSquare.classList.remove("brightness-75")
@@ -81,13 +70,38 @@
 		takeAudio = new Audio("/sounds/take.aac")
 		castleAudio = new Audio("/sounds/castle.aac")
 		moveAudio = new Audio("/sounds/move.aac")
+
+		document.addEventListener("mouseup", (event) => {
+			let targetSquare = event.target
+
+			if (!draggingPiece) return
+			if (!(targetSquare instanceof HTMLElement)) return
+			if (!targetSquare.classList.contains("square") && !targetSquare.classList.contains("piece"))
+				return
+			if (
+				targetSquare instanceof HTMLImageElement &&
+				targetSquare.parentElement &&
+				targetSquare.parentElement instanceof HTMLDivElement
+			)
+				targetSquare = targetSquare.parentElement
+			if (!(targetSquare instanceof HTMLDivElement)) return
+
+			onDrop(targetSquare)
+			draggingPieceCopy?.remove()
+		})
+		document.addEventListener("mousemove", (event) => {
+			if (!draggingPiece || !draggingPieceCopy) return
+
+			draggingPieceCopy.style.top = `${event.clientY}px`
+			draggingPieceCopy.style.left = `${event.clientX}px`
+		})
 	})
 
 	const finishPromoting = (promoteTo: string) => {
 		if (!isPromoting) return
-		if (!draggingPiece.parentElement) return
+		if (!draggingPiece?.parentElement) return
 
-		move.promotion = promoteTo
+		move.promotion = promoteTo.toLowerCase()
 
 		if (movePiece()) isPromoting = false
 	}
@@ -172,7 +186,7 @@
 	}
 
 	// TODO: sepearte into several files
-	// TODO: implement castling and promotions for black
+	// TODO: implement promotions for black
 </script>
 
 <div
@@ -247,44 +261,32 @@
 						j
 					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
 					draggable="false"
-					on:dragover={(event) => {
-						event.preventDefault()
-
-						if (!(event.target instanceof HTMLElement)) return
-
-						let target = event.target
-
-						if (!target.parentElement) return
-						if (!(target instanceof HTMLDivElement)) target = target.parentElement
-
-						target.classList.add("brightness-75")
-					}}
-					on:dragleave={(event) => {
-						event.preventDefault()
-
-						if (!(event.target instanceof HTMLElement)) return
-
-						let target = event.target
-
-						if (!target.parentElement) return
-						if (!(target instanceof HTMLDivElement)) target = target.parentElement
-
-						target.classList.remove("brightness-75")
-					}}
-					on:drop={(event) => {
-						onDrop(event)
-					}}
 				>
 					{#if item}
 						<img
 							src={`/pieces/${item.color}_${item.type}.svg`}
 							alt={item.type}
 							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece z-10"
-							draggable="true"
-							data-label={`${item.color}_${item.type}`}
-							on:dragstart={(event) => {
-								if (event.target instanceof HTMLImageElement) draggingPiece = event.target
+							draggable="false"
+							on:mousedown={(event) => {
+								if (!(event.target instanceof HTMLImageElement)) return
+								if (!event.target.classList.contains("piece")) return
+
+								draggingPiece = event.target
+
+								const rect = draggingPiece.getBoundingClientRect()
+								const copied = draggingPiece.cloneNode(true)
+								if (!(copied instanceof HTMLImageElement)) return
+
+								copied.className = `fixed top-0 left-0 object-contain cursor-pointer piece-copy z-10 select-none transform-gpu -translate-x-1/2 -translate-y-1/2 pointer-events-none`
+								copied.width = rect.width
+								copied.height = rect.height
+
+								draggingPieceCopy = copied
+
+								document.body.appendChild(draggingPieceCopy)
 							}}
+							data-label={`${item.color}_${item.type}`}
 						/>
 					{/if}
 				</div>

@@ -7,6 +7,7 @@
     "dev": "ts-node-dev src/app.ts"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^18.15.11",
     "@types/ws": "^8.5.5",
     "prettier": "^3.0.0",
@@ -21,6 +22,7 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.19.2",
     "graphql": "^16.7.1",
+    "jsonwebtoken": "^9.0.1",
     "mercurius": "^13.1.0",
     "redis": "^4.6.5",
     "superjson": "^1.12.4",
