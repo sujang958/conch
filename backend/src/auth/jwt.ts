@@ -1,7 +1,7 @@
-import { TokenPayload } from "@@/types/token"
 import { config } from "dotenv"
 import jwt from "jsonwebtoken"
 import SuperJSON from "superjson"
+import { TokenPayload } from "../types/token.js"
 
 config()
 
@@ -20,7 +20,6 @@ export const verify = async (token: string) => {
   if (!JWT_SECRET) throw new Error("Can't load theJWT secret")
 
   const parsed = SuperJSON.parse(jwt.verify(token, JWT_SECRET).toString())
-
   const typeChecked = TokenPayload.safeParse(parsed)
 
   if (!typeChecked.success) throw new Error("Invalid JWT payload")

@@ -1,8 +1,8 @@
 import Fastify from "fastify"
 import WebsocketPlugin from "@fastify/websocket"
-import { redisClient } from "./db/redis"
-import setupWebsocket from "./ws"
-import setupGraphQL from "./gql"
+import { redisClient } from "./db/redis.js"
+import setupWebsocket from "./ws/index.js"
+import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
 
 config()

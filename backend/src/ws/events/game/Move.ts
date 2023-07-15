@@ -1,10 +1,10 @@
-import { verify } from "@@/auth/jwt"
-import { redisClient } from "@@/db/redis"
-import { EventFile } from "@@/types/events"
-import { GameInfo } from "@@/types/schemas"
-import { broadcast } from "@@/utils/broadcast"
+
 import { Chess } from "chess.js"
 import SuperJSON from "superjson"
+import { EventFile } from "../../../types/events.js"
+import { redisClient } from "../../../db/redis.js"
+import { verify } from "../../../auth/jwt.js"
+import { broadcast } from "../../../utils/broadcast.js"
 
 const MoveEvent: EventFile = {
   name: "MOVE",

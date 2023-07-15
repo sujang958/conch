@@ -88,6 +88,7 @@
 
 			onDrop(targetSquare)
 			draggingPieceCopy?.remove()
+			draggingPiece.parentElement?.classList.remove("brightness-75")
 		})
 		document.addEventListener("mousemove", (event) => {
 			if (!draggingPiece || !draggingPieceCopy) return
@@ -273,6 +274,7 @@
 								if (!event.target.classList.contains("piece")) return
 
 								draggingPiece = event.target
+								draggingPiece.parentElement?.classList.add("brightness-75")
 
 								const rect = draggingPiece.getBoundingClientRect()
 								const copied = draggingPiece.cloneNode(true)

@@ -1,7 +1,7 @@
-import { EventFile, eventFile } from "@@/types/events"
 import { FastifyInstance } from "fastify"
 import { readdirSync } from "fs"
 import { join } from "path"
+import { EventFile, eventFile } from "../types/events"
 
 const lobbyEvents = new Map<string, EventFile>()
 const gameEvents = new Map<string, EventFile>()
