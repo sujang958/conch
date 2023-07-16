@@ -286,6 +286,8 @@
 								copied.className = `fixed top-0 left-0 object-contain cursor-pointer piece-copy z-10 select-none transform-gpu -translate-x-1/2 -translate-y-1/2 pointer-events-none`
 								copied.width = rect.width
 								copied.height = rect.height
+								copied.style.top = `${event.clientY}px`
+								copied.style.left = `${event.clientX}px`
 
 								draggingPieceCopy = copied
 
