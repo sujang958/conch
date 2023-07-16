@@ -93,11 +93,8 @@
 		})
 	})
 
-	// TODO: fix errors on promoting g5 h6 gxh6 g6 h6xg6 f5 g7 f4 can't promote
-
 	const finishPromoting = (promoteTo: string) => {
 		if (!isPromoting) return
-		if (!draggingPiece?.parentElement) return
 
 		move.promotion = promoteTo.toLowerCase()
 
