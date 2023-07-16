@@ -6,11 +6,11 @@
 	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
 		if (x % 2 == 0 && y % 2 == 0) {
-			return "bg-[#769656]"
+			return "bg-[#f0d9b5]"
 		} else if (y % 2 !== 0 && x % 2 !== 0) {
-			return "bg-[#769656]"
+			return "bg-[#f0d9b5]"
 		} else {
-			return "bg-[#eeeed2]"
+			return "bg-[#b58863]"
 		}
 	}
 
@@ -173,11 +173,8 @@
 	}
 
 	$: if (promotionWindow) {
-		if (isPromoting) {
-			promotionWindow.style.display = "grid"
-		} else {
-			promotionWindow.style.display = "none"
-		}
+		if (isPromoting) promotionWindow.style.display = "grid"
+		else promotionWindow.style.display = "none"
 	}
 
 	// TODO: sepearte into several files
