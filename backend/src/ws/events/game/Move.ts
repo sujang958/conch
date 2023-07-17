@@ -1,6 +1,4 @@
-
 import { Chess } from "chess.js"
-import SuperJSON from "superjson"
 import { EventFile } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
 import { verify } from "../../../auth/jwt.js"
@@ -28,10 +26,7 @@ const MoveEvent: EventFile = {
 
     const chess = new Chess(fen)
 
-    broadcast(
-      ws.clients,
-      SuperJSON.stringify({ board: chess.board(), id: gameId }),
-    )
+    broadcast(ws.clients, JSON.stringify({ board: chess.board(), id: gameId }))
   },
 }
 

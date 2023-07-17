@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" INT4 NOT NULL DEFAULT unique_rowid(),
+    "id" STRING NOT NULL,
     "picture" STRING NOT NULL,
     "bio" STRING NOT NULL,
     "elo" INT4 NOT NULL,
@@ -11,12 +11,12 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Game" (
-    "id" INT4 NOT NULL DEFAULT unique_rowid(),
+    "id" STRING NOT NULL,
     "fan" STRING NOT NULL,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "whiteId" INT4 NOT NULL,
-    "blackId" INT4 NOT NULL,
-    "winnerId" INT4 NOT NULL,
+    "whiteId" STRING NOT NULL,
+    "blackId" STRING NOT NULL,
+    "winnerId" STRING NOT NULL,
 
     CONSTRAINT "Game_pkey" PRIMARY KEY ("id")
 );

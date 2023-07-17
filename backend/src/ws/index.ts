@@ -1,29 +1,42 @@
 import { FastifyInstance } from "fastify"
 import { readdirSync } from "fs"
 import { join } from "path"
-import { EventFile, eventFile } from "../types/events"
+import { EventFile, eventFile } from "../types/events.js"
+import { URL, fileURLToPath, pathToFileURL } from "url"
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url))
 
 const lobbyEvents = new Map<string, EventFile>()
 const gameEvents = new Map<string, EventFile>()
 
-for (const eventFile of readdirSync(join(__dirname, "./events/lobby/"))) {
-  const event: EventFile = require(join(
-    __dirname,
-    "events/lobby/",
-    eventFile,
-  )).default
-  lobbyEvents.set(event.name, event)
+const loadEvents = async (category: string, map: Map<string, EventFile>) => {
+  const eventsPath = `./events/${category}/`
+  const results = await Promise.allSettled(
+    readdirSync(join(__dirname, eventsPath)).map(async (eventFileName) => {
+      const event = (
+        await import(
+          pathToFileURL(join(__dirname, eventsPath, eventFileName)).href
+        )
+      ).default
+      const parsed = eventFile.parse(event)
+
+      map.set(parsed.name, parsed)
+    }),
+  )
+
+  results
+    .filter(
+      (result): result is PromiseRejectedResult => result.status == "rejected",
+    )
+    .forEach((rejected) => {
+      console.log("Rejected", rejected.reason)
+    })
 }
 
-for (const _eventFile of readdirSync(join(__dirname, "./events/game/"))) {
-  const event: EventFile = require(join(
-    __dirname,
-    "events/game/",
-    _eventFile,
-  )).default
-  console.log(eventFile.safeParse(event))
-  gameEvents.set(event.name, event)
-}
+await Promise.all([
+  loadEvents("lobby", lobbyEvents),
+  loadEvents("game", gameEvents),
+])
 
 const parseCookie = (cookies: string) =>
   Object.fromEntries(
