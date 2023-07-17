@@ -25,6 +25,9 @@ const JoinGameEvent: EventFile = {
       redisClient.lRange(queueId, 0, -1),
       verify(cookie.token),
     ])
+
+    if (!user) return
+
     const userInfo = await prisma.user.findUnique({ where: { id: user.id } })
 
     if (!userInfo) return
@@ -73,10 +76,12 @@ const JoinGameEvent: EventFile = {
         increment: parsedArg.data.increment,
         createdAt: Date.now(),
       }),
+
       redisClient.hSet(`${gameId}:time`, {
-        white: parsedArg.data.time,
-        black: parsedArg.data.time,
-        increment: parsedArg.data.increment,
+        white: parsedArg.data.time * 1000,
+        black: parsedArg.data.time * 1000,
+        lastMovedTime: Date.now(),
+        increment: parsedArg.data.increment * 1000,
       }),
     ])
 

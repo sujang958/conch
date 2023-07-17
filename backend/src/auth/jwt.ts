@@ -21,7 +21,7 @@ export const verify = async (token: string) => {
   const parsed = JSON.parse(jwt.verify(token, JWT_SECRET).toString())
   const typeChecked = TokenPayload.safeParse(parsed)
 
-  if (!typeChecked.success) throw new Error("Invalid JWT payload")
+  if (!typeChecked.success) return false
 
   return typeChecked.data
 }

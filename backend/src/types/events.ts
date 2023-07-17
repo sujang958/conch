@@ -22,9 +22,13 @@ export const eventRes = z.union([
   z.object({
     type: z.literal("JOIN_GAME"),
     participants: z.array(z.string()),
+    pgn: z.string({ description: "For those who reconnect" }).nullish(),
   }),
   z.object({
     type: z.literal("NEW_BOARD"),
+    gameId: z.string(),
+    move: z.string(),
+    time: z.record(z.string(), z.string()),
   }),
   z.object({
     type: z.literal("GAME_END"),
