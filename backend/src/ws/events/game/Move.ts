@@ -79,10 +79,14 @@ const MoveEvent: EventFile = {
     broadcast(
       ws.clients,
       JSON.stringify({
-        type: "NEW_BOARD",
+        type: "BOARD",
         gameId: gameId,
-        time: await redisClient.hGetAll(`${gameId}`),
-        move: move.san,
+        time: Object.fromEntries(
+          Object.entries(await redisClient.hGetAll(`${gameId}`)).map(
+            ([name, value]) => [name, Number(value)],
+          ),
+        ),
+        pgn: newPgn,
       } satisfies EventRes),
     )
   },
