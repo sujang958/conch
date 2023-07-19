@@ -14,10 +14,10 @@ const moveEventParam = z.object({
 
 const MoveEvent: EventFile = {
   name: "MOVE",
-  execute: async ({ ws, cookie }, arg) => {
-    const now = Date.now()
+  execute: async ({ ws, user }, arg) => {
+    if (!user) return
 
-    // TODO: validate a token from cookies and if not valid, don't make a move
+    const now = Date.now()
 
     const parsedArg = moveEventParam.safeParse(JSON.parse(arg))
 
@@ -27,11 +27,10 @@ const MoveEvent: EventFile = {
 
     const gameId = `game:${rawGameId}`
 
-    const [pgn, players, time, user] = await Promise.all([
+    const [pgn, players, time] = await Promise.all([
       redisClient.get(`${gameId}:pgn`),
       redisClient.hGetAll(`${gameId}:players`),
       redisClient.hGetAll(`${gameId}:time`),
-      verify(cookie.token),
     ])
 
     if (!pgn || !user || !players || !time) return // what about creating them instead of returning?

@@ -14,21 +14,19 @@ const joinGameParam = z.object({
 
 const JoinGameEvent: EventFile = {
   name: "JOIN_GAME",
-  execute: async ({ cookie, socket, ws }, arg) => {
+  execute: async ({ user, socket, ws }, arg) => {
+    if (!user) return
+
     const parsedArg = joinGameParam.safeParse(JSON.parse(arg))
 
     if (!parsedArg.success) return
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
-    const [queue, user] = await Promise.all([
+    const [queue, userInfo] = await Promise.all([
       redisClient.lRange(queueId, 0, -1),
-      verify(cookie.token),
+      prisma.user.findUnique({ where: { id: user.id } }),
     ])
-
-    if (!user) return
-
-    const userInfo = await prisma.user.findUnique({ where: { id: user.id } })
 
     if (!userInfo) return
 
@@ -85,6 +83,7 @@ const JoinGameEvent: EventFile = {
       }),
     ])
 
+    // TODO: change to rooms
     broadcast(
       ws.clients,
       JSON.stringify({

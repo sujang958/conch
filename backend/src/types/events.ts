@@ -7,7 +7,11 @@ export const eventFile = z.object({
     .function()
     .args(
       z.object({
-        cookie: z.record(z.string(), z.string()),
+        user: z
+          .object({
+            id: z.string(),
+          })
+          .nullish(),
         socket: z.instanceof(WebSocket),
         ws: z.instanceof(WebSocketServer),
       }),

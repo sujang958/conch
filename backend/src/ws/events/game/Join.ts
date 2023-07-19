@@ -10,7 +10,7 @@ const joinEventParam = z.object({
 
 const JoinEvent: EventFile = {
   name: "JOIN",
-  execute: async ({ cookie, socket, ws }, arg) => {
+  execute: async ({ user, socket, ws }, arg) => {
     const parsed = joinEventParam.safeParse(JSON.parse(arg))
 
     if (!parsed.success) return

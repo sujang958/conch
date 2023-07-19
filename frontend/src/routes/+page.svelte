@@ -182,10 +182,10 @@
 </script>
 
 <div
-	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-900 text-white py-6 gap-x-8"
+	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-950 text-white py-6 gap-x-8"
 >
 	<!-- TODO: try using min() function vh vw -->
-	<div draggable="false" class="w-[85vh] h-[85vh] bg-black select-none grid grid-cols-8 relative">
+	<div draggable="false" class="w-[83vh] h-[83vh] bg-black select-none grid grid-cols-8 relative">
 		<!-- one square per 12.5% -->
 		<div
 			class="absolute bottom-3/4 w-1/4 left-[12.5%] top-0 bg-white rounded z-50 hidden grid-cols-2 gap-3 p-2"
@@ -300,7 +300,7 @@
 			{/each}
 		{/each}
 	</div>
-	<div class="bg-neutral-800 rounded-lg w-1/6 p-4">
+	<div class="bg-neutral-900 rounded-lg w-1/6 p-4">
 		<p
 			class="text-2xl font-bold before:rounded-lg before:content-['GM'] before:bg-red-600 before:text-xl before:px-1 before:mr-2"
 		>

@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev src/app.ts"
+    "dev": "ts-node-dev src/app.ts",
+    "generate": "prisma generate"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.2",
@@ -18,7 +19,7 @@
   },
   "dependencies": {
     "@fastify/websocket": "^8.2.0",
-    "@prisma/client": "^4.12.0",
+    "@prisma/client": "^5.0.0",
     "chess.js": "^1.0.0-beta.4",
     "dotenv": "^16.0.3",
     "fastify": "^4.19.2",

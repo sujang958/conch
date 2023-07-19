@@ -19,7 +19,7 @@ fastify.register(setupWebsocket)
 setupGraphQL(fastify)
 
 const main = async () => {
-  // await dbClient.connect()
+  await redisClient.connect()
 
   try {
     const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })

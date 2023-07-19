@@ -1,8 +1,11 @@
-import { FastifyInstance } from "fastify"
+import { FastifyInstance, FastifyRequest } from "fastify"
 import { readdirSync } from "fs"
 import { join } from "path"
 import { EventFile, eventFile } from "../types/events.js"
 import { URL, fileURLToPath, pathToFileURL } from "url"
+import { verify } from "../auth/jwt.js"
+import WebSocket from "ws"
+import fastifyWebsocket from "@fastify/websocket"
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url))
 
@@ -47,44 +50,47 @@ const parseCookie = (cookies: string) =>
       ),
   )
 
+const handleMessage = async ({
+  message,
+  connection,
+  fastify,
+  req,
+  events,
+}: {
+  message: WebSocket.RawData
+  fastify: FastifyInstance
+  connection: fastifyWebsocket.SocketStream
+  req: FastifyRequest
+  events: Map<string, EventFile>
+}) => {
+  const args = message.toString("utf8").split(" ")
+  const event = args.shift()?.toUpperCase()
+
+  const eventFile = events.get(event ?? "")
+  if (!eventFile) return connection.socket.send("")
+
+  const cookie = parseCookie(req.headers.cookie ?? "")
+
+  eventFile.execute(
+    {
+      user: await verify(cookie.token),
+      ws: fastify.websocketServer,
+      socket: connection.socket,
+    },
+    args.join(" "),
+  )
+}
+
 const setupWebsocket = async (fastify: FastifyInstance) => {
   fastify.get("/ws/lobby", { websocket: true }, (connection, req) => {
-    connection.socket.on("message", (message) => {
-      const args = message.toString("utf8").split(" ")
-      const event = args.shift()?.toUpperCase()
-
-      const eventFile = lobbyEvents.get(event ?? "")
-
-      if (!eventFile) return connection.socket.send("")
-
-      eventFile.execute(
-        {
-          cookie: parseCookie(req.headers.cookie ?? ""),
-          ws: fastify.websocketServer,
-          socket: connection.socket,
-        },
-        args.join(" "),
-      )
+    connection.socket.on("message", async (message) => {
+      handleMessage({ message, connection, events: lobbyEvents, fastify, req })
     })
   })
 
   fastify.get("/ws/game", { websocket: true }, (connection, req) => {
-    connection.socket.on("message", (message) => {
-      const args = message.toString("utf8").split(" ")
-      const event = args.shift()?.toUpperCase()
-
-      const eventFile = gameEvents.get(event ?? "")
-
-      if (!eventFile) return connection.socket.send("")
-
-      eventFile.execute(
-        {
-          cookie: parseCookie(req.headers.cookie ?? ""),
-          ws: fastify.websocketServer,
-          socket: connection.socket,
-        },
-        args.join(" "),
-      )
+    connection.socket.on("message", async (message) => {
+      handleMessage({ message, connection, events: gameEvents, fastify, req })
     })
   })
 }
