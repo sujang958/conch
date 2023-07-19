@@ -25,7 +25,7 @@ export type EventFile = z.infer<typeof eventFile>
 export const eventRes = z.union([
   z.object({
     type: z.literal("JOIN_GAME"),
-    participants: z.array(z.string()),
+    gameId: z.string(),
   }),
   z.object({
     type: z.literal("BOARD"),

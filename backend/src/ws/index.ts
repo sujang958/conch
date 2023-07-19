@@ -6,6 +6,7 @@ import { URL, fileURLToPath, pathToFileURL } from "url"
 import { verify } from "../auth/jwt.js"
 import WebSocket from "ws"
 import fastifyWebsocket from "@fastify/websocket"
+import { individuals } from "./events/rooms.js"
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url))
 
@@ -56,12 +57,14 @@ const handleMessage = async ({
   fastify,
   req,
   events,
+  beforeExecute,
 }: {
   message: WebSocket.RawData
   fastify: FastifyInstance
   connection: fastifyWebsocket.SocketStream
   req: FastifyRequest
   events: Map<string, EventFile>
+  beforeExecute?: ({ userId }: { userId?: string }) => any
 }) => {
   const args = message.toString("utf8").split(" ")
   const event = args.shift()?.toUpperCase()
@@ -70,10 +73,13 @@ const handleMessage = async ({
   if (!eventFile) return connection.socket.send("")
 
   const cookie = parseCookie(req.headers.cookie ?? "")
+  const user = await verify(cookie.token)
+
+  if (beforeExecute) await beforeExecute({ userId: user?.id })
 
   eventFile.execute(
     {
-      user: await verify(cookie.token),
+      user,
       ws: fastify.websocketServer,
       socket: connection.socket,
     },
@@ -84,14 +90,32 @@ const handleMessage = async ({
 const setupWebsocket = async (fastify: FastifyInstance) => {
   fastify.get("/ws/lobby", { websocket: true }, (connection, req) => {
     connection.socket.on("message", async (message) => {
-      handleMessage({ message, connection, events: lobbyEvents, fastify, req })
+      handleMessage({
+        message,
+        connection,
+        events: lobbyEvents,
+        fastify,
+        req,
+        beforeExecute: ({ userId }) => {
+          if (!userId) return
+
+          individuals.set(userId, connection.socket)
+        },
+      })
     })
   })
 
   fastify.get("/ws/game", { websocket: true }, (connection, req) => {
     connection.socket.on("message", async (message) => {
-      handleMessage({ message, connection, events: gameEvents, fastify, req })
+      handleMessage({
+        message,
+        connection,
+        events: gameEvents,
+        fastify,
+        req,
+      })
     })
   })
 }
+
 export default setupWebsocket

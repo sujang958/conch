@@ -6,6 +6,7 @@ import prisma from "../../../../prisma/prisma.js"
 import { nanoid } from "nanoid"
 import { Chess } from "chess.js"
 import { broadcast } from "../../../utils/broadcast.js"
+import { individuals } from "../rooms.js"
 
 const joinGameParam = z.object({
   time: z.number({ description: "in seconds" }),
@@ -68,7 +69,7 @@ const JoinGameEvent: EventFile = {
           : { white: availableUserId.toString(), black: user.id },
       ),
       redisClient.set(`${gameId}:fen`, board.fen()),
-      redisClient.set(`${gameId}:fen`, board.pgn()),
+      redisClient.set(`${gameId}:pgn`, board.pgn()),
       redisClient.hSet(`${gameId}:info`, {
         time: parsedArg.data.time,
         increment: parsedArg.data.increment,
@@ -83,14 +84,19 @@ const JoinGameEvent: EventFile = {
       }),
     ])
 
-    // TODO: change to rooms
-    broadcast(
-      ws.clients,
-      JSON.stringify({
-        type: "JOIN_GAME",
-        participants: [user.id, availableUserId.toString()],
-      } satisfies EventRes),
-    )
+    const user1 = individuals.get(user.id)
+    const user2 = individuals.get(availableUserId.toString())
+
+    if (!user1 || !user2) return // TODO: send an error event res
+    if (!user1.OPEN || !user2.OPEN) return
+
+    const res = JSON.stringify({
+      type: "JOIN_GAME",
+      gameId: id,
+    } satisfies EventRes)
+
+    user1.send(res)
+    user2.send(res)
   },
 }
 
