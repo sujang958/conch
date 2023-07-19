@@ -4,6 +4,8 @@ import { redisClient } from "../../../db/redis.js"
 import { verify } from "../../../auth/jwt.js"
 import { broadcast } from "../../../utils/broadcast.js"
 import { z } from "zod"
+import { getOrCreate } from "../../../utils/map.js"
+import { gameHouseholds } from "../rooms.js"
 
 const moveEventParam = z.object({
   gameId: z.string(),
@@ -64,7 +66,7 @@ const MoveEvent: EventFile = {
 
     if (chess.turn() !== turn) return
 
-    const move = chess.move({ from, to, promotion })
+    chess.move({ from, to, promotion })
 
     const newPgn = chess.pgn()
 
@@ -75,19 +77,26 @@ const MoveEvent: EventFile = {
       redisClient.hSet(`${gameId}:time`, turnFullname, newRemainingTime),
     ])
 
-    broadcast(
-      ws.clients,
-      JSON.stringify({
-        type: "BOARD",
-        gameId: gameId,
-        time: Object.fromEntries(
-          Object.entries(await redisClient.hGetAll(`${gameId}`)).map(
-            ([name, value]) => [name, Number(value)],
-          ),
+    const households = getOrCreate(gameHouseholds, rawGameId, [])
+
+    if (households.length < 1) return
+
+    const res = JSON.stringify({
+      type: "BOARD",
+      gameId: gameId,
+      time: Object.fromEntries(
+        Object.entries(await redisClient.hGetAll(`${gameId}`)).map(
+          ([name, value]) => [name, Number(value)],
         ),
-        pgn: newPgn,
-      } satisfies EventRes),
-    )
+      ),
+      pgn: newPgn,
+    } satisfies EventRes)
+
+    households
+      .filter((household) => !household.CLOSED && !household.CLOSING)
+      .forEach(async (household) => {
+        household.send(res)
+      })
   },
 }
 
