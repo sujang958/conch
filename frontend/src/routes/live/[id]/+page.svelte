@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from "$app/stores"
 	import { getSquare } from "$lib/board"
-	import { Chess, type Color, type Square } from "chess.js"
+	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
+	import { flip } from "svelte/animate"
 
 	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
