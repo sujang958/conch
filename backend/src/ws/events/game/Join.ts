@@ -25,7 +25,7 @@ const JoinEvent: EventFile = {
 
     const [pgn, time] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),
-      await redisClient.hGetAll(`${gameId}:time`),
+      await redisClient.hgetall(`${gameId}:time`),
     ])
 
     const res = JSON.stringify({

@@ -1,8 +1,6 @@
 import { config } from "dotenv"
-import { createClient } from "redis"
+import { Redis } from "ioredis"
 
 config()
 
-export const redisClient = createClient({
-  url: process.env.REDIS_URL,
-})
+export const redisClient = new Redis(process.env.REDIS_URL ?? "")

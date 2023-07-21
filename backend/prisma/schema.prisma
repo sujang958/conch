@@ -12,6 +12,7 @@ datasource db {
 
 model User {
   id         String   @id @default(cuid())
+  name       String?
   picture    String
   bio        String
   elo        Int
@@ -24,7 +25,10 @@ model User {
 model Game {
   id        String   @id @default(uuid())
   fan       String
-  startedAt DateTime @default(now())
+  pgn       String
+  time      Int
+  increment Int
+  createdAt DateTime @default(now())
 
   white   User   @relation("white", fields: [whiteId], references: [id])
   black   User   @relation("black", fields: [blackId], references: [id])

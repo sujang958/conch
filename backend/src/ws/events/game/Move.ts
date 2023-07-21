@@ -31,8 +31,8 @@ const MoveEvent: EventFile = {
 
     const [pgn, players, time] = await Promise.all([
       redisClient.get(`${gameId}:pgn`),
-      redisClient.hGetAll(`${gameId}:players`),
-      redisClient.hGetAll(`${gameId}:time`),
+      redisClient.hgetall(`${gameId}:players`),
+      redisClient.hgetall(`${gameId}:time`),
     ])
 
     if (!pgn || !user || !players || !time) return // what about creating them instead of returning?
@@ -73,8 +73,8 @@ const MoveEvent: EventFile = {
     await Promise.all([
       redisClient.set(`${gameId}:fen`, chess.fen()),
       redisClient.set(`${gameId}:pgn`, newPgn),
-      redisClient.hSet(`${gameId}:time`, "lastMovedTime", now),
-      redisClient.hSet(`${gameId}:time`, turnFullname, newRemainingTime),
+      redisClient.hset(`${gameId}:time`, "lastMovedTime", now),
+      redisClient.hset(`${gameId}:time`, turnFullname, newRemainingTime),
     ])
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
@@ -85,7 +85,7 @@ const MoveEvent: EventFile = {
       type: "BOARD",
       gameId: gameId,
       time: Object.fromEntries(
-        Object.entries(await redisClient.hGetAll(`${gameId}`)).map(
+        Object.entries(await redisClient.hgetall(`${gameId}`)).map(
           ([name, value]) => [name, Number(value)],
         ),
       ),

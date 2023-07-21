@@ -91,6 +91,21 @@
 			draggingPieceCopy.style.top = `${event.clientY}px`
 			draggingPieceCopy.style.left = `${event.clientX}px`
 		})
+		
+		const ws = new WebSocket("ws://localhost:3000/ws/lobby") // TODO: change to env
+
+		ws.addEventListener("message", ({ data }) => {
+			console.log(data)
+		})
+
+		ws.addEventListener("open", () => {
+			ws.send(
+				`JOIN_GAME ${JSON.stringify({
+					time: 120,
+					increment: 1
+				})}`
+			)
+		})
 	})
 
 	const finishPromoting = (promoteTo: string) => {

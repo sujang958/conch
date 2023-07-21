@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev src/app.ts",
+    "dev": "ts-node-esm src/app.ts",
     "generate": "prisma generate"
   },
   "devDependencies": {
@@ -14,7 +14,6 @@
     "@types/ws": "^8.5.5",
     "prettier": "^3.0.0",
     "prisma": "^5.0.0",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.3"
   },
   "dependencies": {
@@ -24,11 +23,11 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.19.2",
     "graphql": "^16.7.1",
+    "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.1",
     "mercurius": "^13.1.0",
     "mercurius-codegen": "^5.0.3",
     "nanoid": "^4.0.2",
-    "redis": "^4.6.5",
     "zod": "^3.21.4"
   }
 }

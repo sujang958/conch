@@ -25,7 +25,7 @@ const JoinGameEvent: EventFile = {
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
     const [queue, userInfo] = await Promise.all([
-      redisClient.lRange(queueId, 0, -1),
+      redisClient.lrange(queueId, 0, -1),
       prisma.user.findUnique({ where: { id: user.id } }),
     ])
 
@@ -35,20 +35,24 @@ const JoinGameEvent: EventFile = {
       .map((v) => v.replace(/ /gi, "").split(":"))
       .map(([id, elo]) => [id, Number(elo)])
 
-    const availableUserIndex = users.findIndex(
-      ([_, elo]) =>
-        userInfo.elo - 200 <= Number(elo) && Number(elo) <= userInfo.elo + 200,
-    )
+    const availableUserIndex = users
+      .filter(([id, _]) => id !== userInfo.id)
+      .findIndex(
+        ([_, elo]) =>
+          userInfo.elo - 200 <= Number(elo) &&
+          Number(elo) <= userInfo.elo + 200,
+      )
 
     if (availableUserIndex < 0) {
-      await redisClient.rPush(queueId, `${userInfo.id}:${userInfo.elo}`)
+      if (users.filter(([id, _]) => id === userInfo.id).length < 1)
+        await redisClient.rpush(queueId, `${userInfo.id}:${userInfo.elo}`)
       return true
     }
 
     const [availableUserId, _] = users[availableUserIndex]
 
-    await redisClient.lSet(queueId, availableUserIndex, "DEL")
-    await redisClient.lRem(queueId, 0, "DEL")
+    await redisClient.lset(queueId, availableUserIndex, "DEL")
+    await redisClient.lrem(queueId, 0, "DEL")
 
     let id = nanoid()
     while (true) {
@@ -62,7 +66,7 @@ const JoinGameEvent: EventFile = {
     const board = new Chess()
 
     await Promise.all([
-      redisClient.hSet(
+      redisClient.hset(
         `${gameId}:players`,
         Math.random() > 0.5
           ? { white: user.id, black: availableUserId.toString() }
@@ -70,13 +74,13 @@ const JoinGameEvent: EventFile = {
       ),
       redisClient.set(`${gameId}:fen`, board.fen()),
       redisClient.set(`${gameId}:pgn`, board.pgn()),
-      redisClient.hSet(`${gameId}:info`, {
+      redisClient.hset(`${gameId}:info`, {
         time: parsedArg.data.time,
         increment: parsedArg.data.increment,
         createdAt: Date.now(),
       }),
 
-      redisClient.hSet(`${gameId}:time`, {
+      redisClient.hset(`${gameId}:time`, {
         white: parsedArg.data.time * 1000,
         black: parsedArg.data.time * 1000,
         lastMovedTime: Date.now(),
