@@ -80,7 +80,16 @@
 
 			switch (event.type) {
 				case "BOARD":
-				
+					game.load(event.fen)
+					game.loadPgn(event.pgn)
+					const san = game.history().at(-1)
+					if (san?.includes("x")) playSound(takeAudio)
+					else if (san?.includes("O-O")) {
+						playSound(moveAudio)
+						setTimeout(playSound.bind(null, moveAudio), 50)
+					} else playSound(moveAudio)
+
+					board = game.board()
 					break
 
 				default:
@@ -94,6 +103,10 @@
 					gameId
 				})}`
 			)
+		})
+
+		ws.addEventListener("close", () => {
+			// TODO: add an alert that shows "you're disconnected"
 		})
 	})
 
@@ -135,16 +148,7 @@
 
 	const movePiece = (): boolean => {
 		try {
-			// const { san } = game.move(move)
 			ws.send(`MOVE ${JSON.stringify({ ...move, gameId })}`)
-
-			// if (san.includes("x")) playSound(takeAudio)
-			// else if (san.includes("O-O")) {
-			// 	playSound(moveAudio)
-			// 	setTimeout(playSound.bind(null, moveAudio), 50)
-			// } else playSound(moveAudio)
-
-			// board = game.board()
 
 			return true
 		} catch (e) {

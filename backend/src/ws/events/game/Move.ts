@@ -43,13 +43,19 @@ const MoveEvent: EventFile = {
 
     if (!foundTurn) return
 
-    const requestedTurn = foundTurn[0].toLowerCase() == "white" ? "w" : "b"
-    const requestedTurnFullname = requestedTurn == "w" ? "white" : "black"
+    const chess = new Chess()
+
+    chess.loadPgn(pgn)
+
+    const turn = chess.turn()
+    const turnFullname = turn == "w" ? "white" : "black"
+
+    if (players[turnFullname] !== user.id) return
 
     const lastMovedTime = Number(time.lastMovedTime)
     const increment = Number(time.increment)
 
-    const remainingTimeStr = time[requestedTurnFullname]
+    const remainingTimeStr = time[turnFullname]
     const remainingTime = Number(remainingTimeStr)
 
     if (isNaN(remainingTime) || isNaN(lastMovedTime) || isNaN(increment)) return
@@ -60,12 +66,6 @@ const MoveEvent: EventFile = {
       return // TODO: send a GAME_END event and tell them who's the winner.
     }
 
-    const chess = new Chess()
-
-    chess.loadPgn(pgn)
-
-    if (chess.turn() !== requestedTurn) return
-
     chess.move({ from, to, promotion })
 
     const newPgn = chess.pgn()
@@ -75,11 +75,7 @@ const MoveEvent: EventFile = {
       redisClient.set(`${gameId}:fen`, newFen),
       redisClient.set(`${gameId}:pgn`, newPgn),
       redisClient.hset(`${gameId}:time`, "lastMovedTime", now),
-      redisClient.hset(
-        `${gameId}:time`,
-        requestedTurnFullname,
-        newRemainingTime,
-      ),
+      redisClient.hset(`${gameId}:time`, turnFullname, newRemainingTime),
     ])
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
