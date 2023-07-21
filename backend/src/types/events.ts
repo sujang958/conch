@@ -31,6 +31,7 @@ export const eventRes = z.union([
     type: z.literal("BOARD"),
     gameId: z.string(),
     pgn: z.string(),
+    fen: z.string(),
     time: z.record(z.string(), z.number()),
   }),
   z.object({

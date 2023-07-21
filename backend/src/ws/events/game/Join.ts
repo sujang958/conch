@@ -28,8 +28,9 @@ const JoinEvent: EventFile = {
 
     households.push(socket)
 
-    const [pgn, time] = await Promise.all([
+    const [pgn, fen, time] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),
+      await redisClient.get(`${gameId}:fen`),
       await redisClient.hgetall(`${gameId}:time`),
     ])
 
@@ -37,6 +38,7 @@ const JoinEvent: EventFile = {
       type: "BOARD",
       gameId: rawGameId,
       pgn: pgn ?? "",
+      fen: fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
       time: Object.fromEntries(
         Object.entries(time).map(([name, value]) => [name, Number(value)]),
       ),

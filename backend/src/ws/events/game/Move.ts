@@ -69,9 +69,10 @@ const MoveEvent: EventFile = {
     chess.move({ from, to, promotion })
 
     const newPgn = chess.pgn()
+    const newFen = chess.fen()
 
     await Promise.all([
-      redisClient.set(`${gameId}:fen`, chess.fen()),
+      redisClient.set(`${gameId}:fen`, newFen),
       redisClient.set(`${gameId}:pgn`, newPgn),
       redisClient.hset(`${gameId}:time`, "lastMovedTime", now),
       redisClient.hset(
@@ -94,6 +95,7 @@ const MoveEvent: EventFile = {
         ),
       ),
       pgn: newPgn,
+      fen: newFen,
     } satisfies EventRes)
 
     households

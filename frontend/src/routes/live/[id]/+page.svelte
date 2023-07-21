@@ -74,7 +74,18 @@
 		ws = new WebSocket("ws://localhost:3000/ws/game")
 
 		ws.addEventListener("message", async (message) => {
-			console.log(message.data)
+			const event = JSON.parse(message.data)
+
+			console.log(event)
+
+			switch (event.type) {
+				case "BOARD":
+				
+					break
+
+				default:
+					break
+			}
 		})
 
 		ws.addEventListener("open", () => {
@@ -83,11 +94,6 @@
 					gameId
 				})}`
 			)
-			ws.send(`MOVE ${JSON.stringify({
-				gameId,
-				from: "e2",
-				to: "e4"
-			})}`)
 		})
 	})
 
@@ -129,15 +135,16 @@
 
 	const movePiece = (): boolean => {
 		try {
-			const { san } = game.move(move)
+			// const { san } = game.move(move)
+			ws.send(`MOVE ${JSON.stringify({ ...move, gameId })}`)
 
-			if (san.includes("x")) playSound(takeAudio)
-			else if (san.includes("O-O")) {
-				playSound(moveAudio)
-				setTimeout(playSound.bind(null, moveAudio), 50)
-			} else playSound(moveAudio)
+			// if (san.includes("x")) playSound(takeAudio)
+			// else if (san.includes("O-O")) {
+			// 	playSound(moveAudio)
+			// 	setTimeout(playSound.bind(null, moveAudio), 50)
+			// } else playSound(moveAudio)
 
-			board = game.board()
+			// board = game.board()
 
 			return true
 		} catch (e) {
