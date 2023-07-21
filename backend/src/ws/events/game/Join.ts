@@ -15,11 +15,16 @@ const JoinEvent: EventFile = {
 
     if (!parsed.success) return
 
-    const { gameId } = parsed.data
+    const { gameId: rawGameId } = parsed.data
+    const gameId = `game:${rawGameId}`
 
-    const households = getOrCreate(gameHouseholds, gameId, [])
+    if (
+      socket.readyState == socket.CLOSED ||
+      socket.readyState == socket.CLOSING
+    )
+      return
 
-    if (socket.CLOSED || socket.CLOSING) return
+    const households = getOrCreate(gameHouseholds, rawGameId, [])
 
     households.push(socket)
 
@@ -30,7 +35,7 @@ const JoinEvent: EventFile = {
 
     const res = JSON.stringify({
       type: "BOARD",
-      gameId,
+      gameId: rawGameId,
       pgn: pgn ?? "",
       time: Object.fromEntries(
         Object.entries(time).map(([name, value]) => [name, Number(value)]),

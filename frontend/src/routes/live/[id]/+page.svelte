@@ -12,7 +12,6 @@
 		})
 
 		ws.addEventListener("open", () => {
-			console.log(ws.readyState)
 			ws.send(
 				`JOIN ${JSON.stringify({
 					gameId
