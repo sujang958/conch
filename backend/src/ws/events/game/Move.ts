@@ -35,7 +35,7 @@ const MoveEvent: EventFile = {
       redisClient.hgetall(`${gameId}:time`),
     ])
 
-    if (!pgn || !user || !players || !time) return // what about creating them instead of returning?
+    if (pgn === null || !user || !players || !time) return
 
     const foundTurn = Object.entries(players).find(
       ([_, value]) => value == user.id,
@@ -43,13 +43,13 @@ const MoveEvent: EventFile = {
 
     if (!foundTurn) return
 
-    const turn = foundTurn[1].toLowerCase() == "white" ? "w" : "b"
-    const turnFullname = turn == "w" ? "white" : "black"
+    const requestedTurn = foundTurn[0].toLowerCase() == "white" ? "w" : "b"
+    const requestedTurnFullname = requestedTurn == "w" ? "white" : "black"
 
     const lastMovedTime = Number(time.lastMovedTime)
     const increment = Number(time.increment)
 
-    const remainingTimeStr = time[turnFullname]
+    const remainingTimeStr = time[requestedTurnFullname]
     const remainingTime = Number(remainingTimeStr)
 
     if (isNaN(remainingTime) || isNaN(lastMovedTime) || isNaN(increment)) return
@@ -64,7 +64,7 @@ const MoveEvent: EventFile = {
 
     chess.loadPgn(pgn)
 
-    if (chess.turn() !== turn) return
+    if (chess.turn() !== requestedTurn) return
 
     chess.move({ from, to, promotion })
 
@@ -74,7 +74,11 @@ const MoveEvent: EventFile = {
       redisClient.set(`${gameId}:fen`, chess.fen()),
       redisClient.set(`${gameId}:pgn`, newPgn),
       redisClient.hset(`${gameId}:time`, "lastMovedTime", now),
-      redisClient.hset(`${gameId}:time`, turnFullname, newRemainingTime),
+      redisClient.hset(
+        `${gameId}:time`,
+        requestedTurnFullname,
+        newRemainingTime,
+      ),
     ])
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
@@ -85,7 +89,7 @@ const MoveEvent: EventFile = {
       type: "BOARD",
       gameId: gameId,
       time: Object.fromEntries(
-        Object.entries(await redisClient.hgetall(`${gameId}`)).map(
+        Object.entries(await redisClient.hgetall(`${gameId}:time`)).map(
           ([name, value]) => [name, Number(value)],
         ),
       ),
@@ -93,10 +97,29 @@ const MoveEvent: EventFile = {
     } satisfies EventRes)
 
     households
-      .filter((household) => !household.CLOSED && !household.CLOSING)
+      .filter(
+        (household) =>
+          household.readyState !== household.CLOSED &&
+          household.readyState !== household.CLOSING,
+      )
       .forEach(async (household) => {
         household.send(res)
       })
+
+    for (const i in households) {
+      const household = households[i]
+      if (
+        household.readyState !== household.CLOSED &&
+        household.readyState !== household.CLOSING
+      )
+        continue
+      delete households[i]
+    }
+
+    gameHouseholds.set(
+      rawGameId,
+      households.filter((v) => v),
+    )
   },
 }
 
