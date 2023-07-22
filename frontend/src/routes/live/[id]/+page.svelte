@@ -65,6 +65,14 @@
 		movePiece()
 	}
 
+	const playSoundByMove = (move: string) => {
+		if (move.includes("x")) playSound(takeAudio)
+		else if (move.includes("O-O")) {
+			playSound(moveAudio)
+			setTimeout(playSound.bind(null, moveAudio), 50)
+		} else playSound(moveAudio)
+	}
+
 	let isMounted = false
 
 	const gameId = $page.params.id
@@ -83,12 +91,9 @@
 				case "BOARD":
 					game.load(event.fen)
 					game.loadPgn(event.pgn)
+
 					const san = game.history().at(-1)
-					if (san?.includes("x")) playSound(takeAudio)
-					else if (san?.includes("O-O")) {
-						playSound(moveAudio)
-						setTimeout(playSound.bind(null, moveAudio), 50)
-					} else playSound(moveAudio)
+					playSoundByMove(san ?? "")
 
 					board = game.board()
 					break
@@ -282,7 +287,7 @@
 				/>
 			</button>
 		</div>
-		{#each board as row, i}
+		{#each board.toReversed() as row, i}
 			{#each row as item, j}
 				<div
 					id={`${String.fromCharCode(j + 65).toLowerCase()}${8 - i}`}

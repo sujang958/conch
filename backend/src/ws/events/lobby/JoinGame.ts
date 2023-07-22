@@ -22,6 +22,23 @@ const JoinGameEvent: EventFile = {
 
     if (!parsedArg.success) return
 
+    const allQueues = await redisClient.keys("queue:*")
+    const searched = await Promise.all(
+      allQueues.map(async (queueId) => {
+        const queue = await redisClient.lrange(queueId, 0, -1)
+        return (
+          queue
+            .map((user) => user.trim().split(":"))
+            .findIndex(([userId, _]) => userId == user.id) < 0
+        )
+      }),
+    )
+
+    if (searched.includes(false)) {
+      // TODO: send an ERROR event and a QUEUE event
+      return
+    }
+
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
     const [queue, userInfo] = await Promise.all([
