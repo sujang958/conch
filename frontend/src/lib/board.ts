@@ -1,3 +1,5 @@
+import { Chess } from "chess.js"
+
 export const getSquare = (element?: any) => {
 	if (!element) return
 
@@ -16,3 +18,7 @@ export const getSquare = (element?: any) => {
 
 	return targetSquare
 }
+
+const game = new Chess()
+
+export type Move = Exclude<Parameters<typeof game.move>[0], string>

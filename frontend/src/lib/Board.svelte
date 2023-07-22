@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { getSquare } from "$lib/board"
+	import { getSquare, type Move } from "$lib/board"
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
+
+	export let onMove: ((move: Move) => any) | null = null
+	export let game: Chess = new Chess()
 
 	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
@@ -17,12 +20,10 @@
 	let draggingPiece: HTMLImageElement | null = null
 	let draggingPieceCopy: HTMLImageElement | null = null
 
-	const game = new Chess()
-
 	let history: string[] = []
-	let board = game.board()
+	export let board = game.board()
 
-	let move: Exclude<Parameters<typeof game.move>[0], string> = { from: "", to: "" }
+	let move: Move = { from: "", to: "" }
 	let promotionWindow: HTMLDivElement
 	let isPromoting = false
 
@@ -103,6 +104,12 @@
 
 	const movePiece = (): boolean => {
 		try {
+			if (onMove) {
+				Promise.resolve(onMove(move)).then(() => {
+					board = game.board()
+				})
+				return true
+			}
 			const { san } = game.move(move)
 
 			if (san.includes("x")) playSound(takeAudio)

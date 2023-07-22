@@ -7,6 +7,7 @@ import { nanoid } from "nanoid"
 import { Chess } from "chess.js"
 import { broadcast } from "../../../utils/broadcast.js"
 import { individuals } from "../rooms.js"
+import { createGame } from "../../../db/games.js"
 
 const joinGameParam = z.object({
   time: z.number({ description: "in seconds" }),
@@ -71,39 +72,11 @@ const JoinGameEvent: EventFile = {
     await redisClient.lset(queueId, availableUserIndex, "DEL")
     await redisClient.lrem(queueId, 0, "DEL")
 
-    let id = nanoid()
-    while (true) {
-      const duplicationCheck = await redisClient.get(`game:${id}:players`)
-      if (!duplicationCheck) break
-      id = nanoid()
-    }
-
-    const gameId = `game:${id}`
-
-    const board = new Chess()
-
-    await Promise.all([
-      redisClient.hset(
-        `${gameId}:players`,
-        Math.random() > 0.5
-          ? { white: user.id, black: availableUserId.toString() }
-          : { white: availableUserId.toString(), black: user.id },
-      ),
-      redisClient.set(`${gameId}:fen`, board.fen()),
-      redisClient.set(`${gameId}:pgn`, board.pgn()),
-      redisClient.hset(`${gameId}:info`, {
-        time: parsedArg.data.time,
-        increment: parsedArg.data.increment,
-        createdAt: Date.now(),
-      }),
-
-      redisClient.hset(`${gameId}:time`, {
-        white: parsedArg.data.time * 1000,
-        black: parsedArg.data.time * 1000,
-        lastMovedTime: Date.now(),
-        increment: parsedArg.data.increment * 1000,
-      }),
-    ])
+    const gameId = await createGame({
+      players: [user.id, availableUserId.toString()],
+      increment: parsedArg.data.increment,
+      time: parsedArg.data.time,
+    })
 
     const user1 = individuals.get(user.id)
     const user2 = individuals.get(availableUserId.toString())
@@ -113,7 +86,7 @@ const JoinGameEvent: EventFile = {
 
     const res = JSON.stringify({
       type: "JOIN_GAME",
-      gameId: id,
+      gameId,
     } satisfies EventRes)
 
     user1.send(res)

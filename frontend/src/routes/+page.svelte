@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Board from "$lib/Board.svelte"
+	import type { Move } from "$lib/board"
+	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
 
 	onMount(() => {
@@ -18,6 +20,45 @@
 			)
 		})
 	})
+
+	// const game = new Chess()
+
+	// let castleAudio: HTMLAudioElement
+	// let moveAudio: HTMLAudioElement
+	// let takeAudio: HTMLAudioElement
+
+	// const playSound = (audio: HTMLAudioElement) => {
+	// 	if (!audio.paused) {
+	// 		audio.currentTime = 0
+	// 		audio.play()
+	// 	} else {
+	// 		audio.play()
+	// 	}
+	// }
+
+	// const playSoundByMove = (move: string) => {
+	// 	if (move.includes("x")) playSound(takeAudio)
+	// 	else if (move.includes("O-O")) {
+	// 		playSound(moveAudio)
+	// 		setTimeout(playSound.bind(null, moveAudio), 50)
+	// 	} else playSound(moveAudio)
+	// }
+
+	// onMount(() => {
+	// 	takeAudio = new Audio("/sounds/take.aac")
+	// 	castleAudio = new Audio("/sounds/castle.aac")
+	// 	moveAudio = new Audio("/sounds/move.aac")
+	// })
+
+	// const onMove = (move: Move) => {
+	// 	const { san } = game.move(move)
+
+	// 	if (san.includes("x")) playSound(takeAudio)
+	// 	else if (san.includes("O-O")) {
+	// 		playSound(moveAudio)
+	// 		setTimeout(playSound.bind(null, moveAudio), 50)
+	// 	} else playSound(moveAudio)
+	// }
 
 	// TODO: sepearte into several files
 	// TODO: implement promotions for black

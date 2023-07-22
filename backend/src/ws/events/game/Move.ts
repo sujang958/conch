@@ -38,12 +38,6 @@ const MoveEvent: EventFile = {
 
       if (pgn === null || !user || !players || !time) return
 
-      const foundTurn = Object.entries(players).find(
-        ([_, value]) => value == user.id,
-      )
-
-      if (!foundTurn) return
-
       const chess = new Chess()
 
       chess.loadPgn(pgn)

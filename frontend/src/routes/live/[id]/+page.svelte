@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/stores"
+	import Board from "$lib/Board.svelte"
 	import { getSquare } from "$lib/board"
 	import { toReversed } from "$lib/utils"
 	import { Chess } from "chess.js"
@@ -228,122 +229,15 @@
 <div
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-950 text-white py-6 gap-x-8"
 >
-	<!-- TODO: try using min() function vh vw -->
-	<div draggable="false" class="w-[83vh] h-[83vh] bg-black select-none grid grid-cols-8 relative">
-		<!-- one square per 12.5% -->
-		<div
-			class="absolute bottom-3/4 w-1/4 left-[12.5%] top-0 bg-white rounded z-50 hidden grid-cols-2 gap-3 p-2"
-			bind:this={promotionWindow}
-		>
-			<button
-				on:click={() => {
-					finishPromoting("Q")
-				}}
-				class="rounded transition duration-100 hover:bg-black/5"
-			>
-				<img
-					src="/pieces/w_q.svg"
-					alt="Queen"
-					class="object-contain w-full cursor-pointer"
-					draggable="false"
-				/>
-			</button>
-			<button
-				on:click={() => {
-					finishPromoting("N")
-				}}
-				class="rounded transition duration-100 hover:bg-black/5"
-			>
-				<img
-					src="/pieces/w_n.svg"
-					alt="Knight"
-					class="object-contain w-full cursor-pointer"
-					draggable="false"
-				/>
-			</button>
-			<button
-				on:click={() => {
-					finishPromoting("B")
-				}}
-				class="rounded transition duration-100 hover:bg-black/5"
-			>
-				<img
-					src="/pieces/w_b.svg"
-					alt="Bishop"
-					class="object-contain w-full cursor-pointer"
-					draggable="false"
-				/>
-			</button>
-			<button
-				on:click={() => {
-					finishPromoting("R")
-				}}
-				class="rounded transition duration-100 hover:bg-black/5"
-			>
-				<img
-					src="/pieces/w_r.svg"
-					alt="Rook"
-					class="object-contain w-full cursor-pointer"
-					draggable="false"
-				/>
-			</button>
-		</div>
-		{#each board as row, i}
-			{#each row as item, j}
-				<div
-					id={`${String.fromCharCode(j + 65).toLowerCase()}${8 - i}`}
-					class={`${decideColor(
-						i,
-						j
-					)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
-					draggable="false"
-					on:mouseenter={(event) => {
-						if (!draggingPiece) return
+	<Board
+		{game}
+		{board}
+		onMove={(_move) => {
+			move = _move
+			movePiece()
+		}}
+	/>
 
-						const square = getSquare(event.target)
-						square?.classList.add("brightness-75")
-					}}
-					on:mouseleave={(event) => {
-						if (!draggingPiece) return
-
-						const square = getSquare(event.target)
-						square?.classList.remove("brightness-75")
-					}}
-				>
-					{#if item}
-						<img
-							src={`/pieces/${item.color}_${item.type}.svg`}
-							alt={item.type}
-							class="object-contain w-full cursor-pointer active:cursor-pointer select-none piece z-10"
-							draggable="false"
-							on:mousedown={(event) => {
-								if (!(event.target instanceof HTMLImageElement)) return
-								if (!event.target.classList.contains("piece")) return
-
-								draggingPiece = event.target
-								draggingPiece.parentElement?.classList.add("brightness-75")
-
-								const rect = draggingPiece.getBoundingClientRect()
-								const copied = draggingPiece.cloneNode(true)
-								if (!(copied instanceof HTMLImageElement)) return
-
-								copied.className = `fixed top-0 left-0 object-contain cursor-pointer piece-copy z-10 select-none transform-gpu -translate-x-1/2 -translate-y-1/2 pointer-events-none`
-								copied.width = rect.width
-								copied.height = rect.height
-								copied.style.top = `${event.clientY}px`
-								copied.style.left = `${event.clientX}px`
-
-								draggingPieceCopy = copied
-
-								document.body.appendChild(draggingPieceCopy)
-							}}
-							data-label={`${item.color}_${item.type}`}
-						/>
-					{/if}
-				</div>
-			{/each}
-		{/each}
-	</div>
 	<div class="bg-neutral-900 rounded-xl w-1/6 p-4 flex flex-col justify-between h-96">
 		<div class="flex flex-col gap-y-4">
 			<button class="rounded-xl bg-neutral-800 text-center font-semibold py-4 text-2xl"
