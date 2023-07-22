@@ -17,11 +17,11 @@ export const createGame = async ({
    */
   increment: number
 }) => {
-  let id = nanoid()
+  let id = nanoid(23)
   while (true) {
     const duplicationCheck = await redisClient.get(`game:${id}:players`)
     if (!duplicationCheck) break
-    id = nanoid()
+    id = nanoid(23)
   }
 
   const gameId = `game:${id}`
