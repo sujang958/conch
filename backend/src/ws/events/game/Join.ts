@@ -28,20 +28,25 @@ const JoinEvent: EventFile = {
 
     households.push(socket)
 
-    const [pgn, fen, time] = await Promise.all([
+    const [pgn, fen, time, players] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),
       await redisClient.get(`${gameId}:fen`),
       await redisClient.hgetall(`${gameId}:time`),
+      await redisClient.hgetall(`${gameId}:players`),
     ])
+
+    if (!pgn || !fen || !time) return // TODO: add an event that makes the player get redirected to main page
 
     const res = JSON.stringify({
       type: "BOARD",
       gameId: rawGameId,
-      pgn: pgn ?? "",
-      fen: fen ?? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      pgn,
+      fen,
       time: Object.fromEntries(
         Object.entries(time).map(([name, value]) => [name, Number(value)]),
       ),
+      ...(user && players.white == user.id && { for: "white" }),
+      ...(user && players.black == user.id && { for: "black" }),
     } satisfies EventRes)
 
     socket.send(res)

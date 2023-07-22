@@ -2,9 +2,12 @@
 	import { getSquare, type Move } from "$lib/board"
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
+	import { toReversed } from "./utils"
 
 	export let onMove: ((move: Move) => any) | null = null
 	export let game: Chess = new Chess()
+	export let board = game.board()
+	export let colorFor: "white" | "black" = "white"
 
 	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
@@ -21,7 +24,6 @@
 	let draggingPieceCopy: HTMLImageElement | null = null
 
 	let history: string[] = []
-	export let board = game.board()
 
 	let move: Move = { from: "", to: "" }
 	let promotionWindow: HTMLDivElement
@@ -127,56 +129,8 @@
 			return false
 		} finally {
 			history = [...game.history()]
+			move.promotion = undefined
 		}
-	}
-
-	const handleCheck = () => {
-		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`)
-		const opponentKingImg = document.querySelector(
-			`[data-label="${game.turn() == "w" ? "b" : "w"}_k"]`
-		)
-		if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return
-		const kingContainer = kingImg.parentElement
-		const opponentKingContainer = opponentKingImg.parentElement
-
-		if (game.isCheck()) {
-			kingContainer.classList.add(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-
-			return
-		} else {
-			opponentKingContainer.classList.remove(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-			kingContainer.classList.remove(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-
-			return
-		}
-	}
-
-	$: if (board && isMounted) {
-		handleCheck()
 	}
 
 	$: if (promotionWindow) {
@@ -244,10 +198,12 @@
 			/>
 		</button>
 	</div>
-	{#each board as row, i}
-		{#each row as item, j}
+	{#each colorFor == "white" ? board : toReversed(board) as row, i}
+		{#each colorFor == "white" ? row : toReversed(row) as item, j}
 			<div
-				id={`${String.fromCharCode(j + 65).toLowerCase()}${8 - i}`}
+				id={`${String.fromCharCode(colorFor == "white" ? j + 65 : 72 - j).toLowerCase()}${
+					colorFor == "white" ? 8 - i : i + 1
+				}`}
 				class={`${decideColor(
 					i,
 					j

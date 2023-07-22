@@ -7,28 +7,12 @@
 	import { onMount } from "svelte"
 	import { flip } from "svelte/animate"
 
-	// TODO: replace decidedColor with game.squareColor
-	const decideColor = (x: number, y: number) => {
-		if (x % 2 == 0 && y % 2 == 0) {
-			return "bg-[#f0d9b5]"
-		} else if (y % 2 !== 0 && x % 2 !== 0) {
-			return "bg-[#f0d9b5]"
-		} else {
-			return "bg-[#b58863]"
-		}
-	}
-
-	let draggingPiece: HTMLImageElement | null = null
-	let draggingPieceCopy: HTMLImageElement | null = null
-
 	const game = new Chess()
 
 	let history: string[] = []
 	let board = game.board()
 
 	let move: Exclude<Parameters<typeof game.move>[0], string> = { from: "", to: "" }
-	let promotionWindow: HTMLDivElement
-	let isPromoting = false
 
 	let castleAudio: HTMLAudioElement
 	let moveAudio: HTMLAudioElement
@@ -43,30 +27,6 @@
 		}
 	}
 
-	const onDrop = (targetSquare: HTMLDivElement) => {
-		if (!draggingPiece) return
-		if (!draggingPiece.parentElement) return
-
-		const draggingPieceNotation = draggingPiece.alt.toUpperCase()
-
-		targetSquare.classList.remove("brightness-75")
-
-		move.from = draggingPiece.parentElement.id
-		move.to = targetSquare.id
-
-		// Handling promotions
-		const [alpahbet, number] = targetSquare.id.trim().split("")
-		if (draggingPieceNotation == "P" && Number(number) == 8) {
-			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`
-
-			isPromoting = true
-
-			return
-		}
-
-		movePiece()
-	}
-
 	const playSoundByMove = (move: string) => {
 		if (move.includes("x")) playSound(takeAudio)
 		else if (move.includes("O-O")) {
@@ -75,11 +35,10 @@
 		} else playSound(moveAudio)
 	}
 
-	let isMounted = false
-
 	const gameId = $page.params.id
 
 	let ws: WebSocket
+	let myColor: "white" | "black" = "white"
 
 	onMount(() => {
 		ws = new WebSocket("ws://localhost:3000/ws/game")
@@ -96,6 +55,8 @@
 
 					const san = game.history().at(-1)
 					playSoundByMove(san ?? "")
+
+					if (event?.for) myColor = event.for
 
 					board = game.board()
 					break
@@ -119,40 +80,10 @@
 	})
 
 	onMount(() => {
-		isMounted = true
-
 		takeAudio = new Audio("/sounds/take.aac")
 		castleAudio = new Audio("/sounds/castle.aac")
 		moveAudio = new Audio("/sounds/move.aac")
-
-		document.addEventListener("mouseup", (event) => {
-			if (!draggingPiece) return
-
-			const targetSquare = getSquare(event.target)
-
-			if (!targetSquare) return
-
-			onDrop(targetSquare)
-			draggingPieceCopy?.remove()
-			draggingPiece.parentElement?.classList.remove("brightness-75")
-			draggingPiece = null
-			draggingPieceCopy = null
-		})
-		document.addEventListener("mousemove", (event) => {
-			if (!draggingPiece || !draggingPieceCopy) return
-
-			draggingPieceCopy.style.top = `${event.clientY}px`
-			draggingPieceCopy.style.left = `${event.clientX}px`
-		})
 	})
-
-	const finishPromoting = (promoteTo: string) => {
-		if (!isPromoting) return
-
-		move.promotion = promoteTo.toLowerCase()
-
-		if (movePiece()) isPromoting = false
-	}
 
 	const movePiece = (): boolean => {
 		try {
@@ -168,61 +99,7 @@
 		}
 	}
 
-	const handleCheck = () => {
-		const kingImg = document.querySelector(`[data-label="${game.turn()}_k"]`)
-		const opponentKingImg = document.querySelector(
-			`[data-label="${game.turn() == "w" ? "b" : "w"}_k"]`
-		)
-		if (!kingImg?.parentElement || !opponentKingImg?.parentElement) return
-		const kingContainer = kingImg.parentElement
-		const opponentKingContainer = opponentKingImg.parentElement
-
-		if (game.isCheck()) {
-			kingContainer.classList.add(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-
-			return
-		} else {
-			opponentKingContainer.classList.remove(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-			kingContainer.classList.remove(
-				"after:w-full",
-				"after:h-full",
-				"after:p-4",
-				"after:bg-red-600/50",
-				"after:rounded-full",
-				"after:blur-2xl",
-				"after:absolute"
-			)
-
-			return
-		}
-	}
-
-	$: if (board && isMounted) {
-		handleCheck()
-	}
-
-	$: if (promotionWindow) {
-		if (isPromoting) promotionWindow.style.display = "grid"
-		else promotionWindow.style.display = "none"
-	}
-
-	// TODO: sepearte into several files
+	// TODO: sepearte into several file
 	// TODO: implement promotions for black
 </script>
 
@@ -232,6 +109,7 @@
 	<Board
 		{game}
 		{board}
+		colorFor={myColor}
 		onMove={(_move) => {
 			move = _move
 			movePiece()
