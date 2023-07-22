@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/stores"
 	import { getSquare } from "$lib/board"
+	import { toReversed } from "$lib/utils"
 	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
 	import { flip } from "svelte/animate"
@@ -287,7 +288,7 @@
 				/>
 			</button>
 		</div>
-		{#each board.toReversed() as row, i}
+		{#each board as row, i}
 			{#each row as item, j}
 				<div
 					id={`${String.fromCharCode(j + 65).toLowerCase()}${8 - i}`}
