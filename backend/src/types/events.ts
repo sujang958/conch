@@ -37,6 +37,18 @@ export const eventRes = z.union([
   }),
   z.object({
     type: z.literal("GAME_END"),
+    reason: z.union([
+      z.literal("STALEMATE"),
+      z.literal("REPETITION"),
+      z.literal("CHECKMATE"),
+      z.literal("DRAW"),
+      z.literal("INSUFFICIENT_MATERIAL"),
+    ]),
+    winnerId: z.string().nullish(),
+    newElo: z.object({
+      white: z.number(),
+      black: z.number(),
+    }),
   }),
 ])
 

@@ -6,6 +6,9 @@ import { broadcast } from "../../../utils/broadcast.js"
 import { z } from "zod"
 import { getOrCreate } from "../../../utils/map.js"
 import { gameHouseholds } from "../rooms.js"
+import { endReason } from "../../../db/games.js"
+import EloRank from "elo-rank"
+import prisma from "../../../../prisma/prisma.js"
 
 const moveEventParam = z.object({
   gameId: z.string(),
@@ -99,6 +102,39 @@ const MoveEvent: EventFile = {
         .forEach(async (household) => {
           household.send(res)
         })
+
+      if (chess.isGameOver()) {
+        const elo = new EloRank()
+
+        const [white, black] = await Promise.all([
+          prisma.user.findUnique({ where: { id: players.white } }),
+          prisma.user.findUnique({
+            where: { id: players.black },
+          }),
+        ])
+
+        if (!white || !black) return // TODO: send an ERROR event
+
+        const whiteElo = white.elo
+        const blackElo = black.elo
+
+        const expectedWhite = elo.getExpected(whiteElo, blackElo)
+        const expectedBlack = elo.getExpected(blackElo, whiteElo)
+
+        if (!chess.isDraw()) {
+          const newWhiteElo = elo.updateRating(expectedWhite, 0.5, whiteElo)
+          const newBlackElo = elo.updateRating(expectedBlack, 0.5, blackElo)
+        } else {
+          
+        }
+
+        const eventRes = JSON.stringify({
+          type: "GAME_END",
+          reason: endReason(chess) ?? "DRAW",
+        } satisfies EventRes)
+      }
+
+      // TODO: implement ties and resigns
 
       for (const i in households) {
         const household = households[i]

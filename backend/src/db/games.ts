@@ -51,3 +51,14 @@ export const createGame = async ({
 
   return id
 }
+
+export const endReason = (chess: Chess) => {
+  if (!chess.isGameOver()) return null
+
+  if (chess.isInsufficientMaterial()) return "INSUFFICIENT_MATERIAL"
+  if (chess.isThreefoldRepetition()) return "REPETITION"
+  if (chess.isStalemate()) return "STALEMATE"
+  if (chess.isCheckmate()) return "CHECKMATE"
+
+  return null
+}
