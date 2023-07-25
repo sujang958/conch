@@ -8,6 +8,7 @@
 	export let game: Chess = new Chess()
 	export let board = game.board()
 	export let colorFor: "white" | "black" = "white"
+	export let allowPlayingAlone: boolean = false
 
 	// TODO: replace decidedColor with game.squareColor
 	const decideColor = (x: number, y: number) => {
@@ -46,9 +47,15 @@
 		if (!draggingPiece) return
 		if (!draggingPiece.parentElement) return
 
-		const draggingPieceNotation = draggingPiece.alt.toUpperCase()
-
 		targetSquare.classList.remove("brightness-75")
+
+		if (
+			!allowPlayingAlone &&
+			draggingPiece.getAttribute("data-label")?.split("_")[0] !== colorFor.at(0)
+		)
+			return
+
+		const draggingPieceNotation = draggingPiece.alt.toUpperCase()
 
 		move.from = draggingPiece.parentElement.id
 		move.to = targetSquare.id

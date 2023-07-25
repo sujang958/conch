@@ -68,7 +68,7 @@
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-950 text-white py-6 gap-x-8"
 >
 	<!-- TODO: try using min() function vh vw -->
-	<Board />
+	<Board allowPlayingAlone />
 	<div class="bg-neutral-900 rounded-xl w-1/6 p-4 flex flex-col justify-between h-96">
 		<div class="flex flex-col gap-y-4">
 			<button class="rounded-xl bg-neutral-800 text-center font-semibold py-4 text-2xl"
