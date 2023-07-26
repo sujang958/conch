@@ -28,6 +28,7 @@ model Game {
   time      Int
   increment Int
   endedAt   DateTime @default(now())
+  createdAt DateTime
 
   white   User   @relation("white", fields: [whiteId], references: [id])
   black   User   @relation("black", fields: [blackId], references: [id])

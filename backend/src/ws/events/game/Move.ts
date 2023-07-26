@@ -171,6 +171,29 @@ const MoveEvent: EventFile = {
 
         households.forEach((household) => household.send(eventRes))
 
+        const gameInfo = await redisClient.hgetall(`${gameId}:info`)
+        gameInfo.time
+
+        const game = await prisma.game.create({
+          data: {
+            increment: Number(gameInfo.increment),
+            time: Number(gameInfo.time),
+            createdAt: new Date(Number(gameInfo.createdAt)),
+            pgn: chess.pgn(),
+            black: { connect: { id: players.black } },
+            white: { connect: { id: players.white } },
+            ...(players[winner] && {
+              winner: { connect: { id: players[winner] } },
+            }),
+          },
+        })
+
+        console.log(game)
+
+        const keys = await redisClient.keys(`${gameId}:*`)
+
+        await redisClient.del(keys)
+
         return
       }
 

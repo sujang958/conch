@@ -35,6 +35,8 @@ const JoinGameEvent: EventFile = {
       }),
     )
 
+    console.log(searched)
+
     if (searched.includes(false)) {
       // TODO: send an ERROR event and a QUEUE event
       return

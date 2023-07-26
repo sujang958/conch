@@ -14,8 +14,8 @@
 		ws.addEventListener("open", () => {
 			ws.send(
 				`JOIN_GAME ${JSON.stringify({
-					time: 120,
-					increment: 1
+					time: 1200000,
+					increment: 1000
 				})}`
 			)
 		})
