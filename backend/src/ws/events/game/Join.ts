@@ -26,7 +26,7 @@ const JoinEvent: EventFile = {
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
 
-    households.push(socket)
+    households.push({ socket, id: user?.id ?? null })
 
     const [pgn, fen, time, players] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),

@@ -74,8 +74,6 @@ const JoinGameEvent: EventFile = {
 
     const [availableUserId, _] = users[availableUserIndex]
 
-    console.log(availableUserId)
-
     await redisClient.lset(queueId, availableUserIndex, "DEL")
     await redisClient.lrem(queueId, 0, "DEL")
 

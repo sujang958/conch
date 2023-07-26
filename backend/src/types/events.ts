@@ -45,6 +45,9 @@ export const eventRes = z.union([
       z.literal("INSUFFICIENT_MATERIAL"),
     ]),
     winnerId: z.string().nullish(),
+    you: z
+      .union([z.literal("WON"), z.literal("LOST"), z.literal("DRAW")])
+      .nullish(),
     newElo: z.object({
       white: z.number(),
       black: z.number(),

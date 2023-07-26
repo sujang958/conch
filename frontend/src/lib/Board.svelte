@@ -140,6 +140,9 @@
 		}
 	}
 
+	// TODO: sepearte into several file
+	// TODO: implement promotions for black
+
 	$: if (promotionWindow) {
 		if (isPromoting) promotionWindow.style.display = "grid"
 		else promotionWindow.style.display = "none"

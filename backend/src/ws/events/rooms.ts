@@ -3,7 +3,10 @@ import { WebSocket } from "ws"
 /**
  * @description gameid:socket[]
  */
-export const gameHouseholds = new Map<string, WebSocket[]>()
+export const gameHouseholds = new Map<
+  string,
+  { id: string | null; socket: WebSocket }[]
+>()
 
 /**
  * @description userid:socket

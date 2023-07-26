@@ -17,6 +17,16 @@ const moveEventParam = z.object({
   promotion: z.string().optional(),
 })
 
+const getVictoryStatus = (
+  me: "white" | "black",
+  winner: "white" | "black" | "draw",
+) => {
+  if (winner == "draw") return "DRAW"
+  if (me == "black")
+    return winner == "white" ? "LOST" : winner == "black" ? "WON" : "DRAW"
+  else return winner == "white" ? "WON" : winner == "black" ? "LOST" : "DRAW"
+}
+
 const getNewElo = async ({
   white,
   black,
@@ -138,12 +148,12 @@ const MoveEvent: EventFile = {
 
       households
         .filter(
-          (household) =>
-            household.readyState !== household.CLOSED &&
-            household.readyState !== household.CLOSING,
+          ({ socket }) =>
+            socket.readyState !== socket.CLOSED &&
+            socket.readyState !== socket.CLOSING,
         )
-        .forEach(async (household) => {
-          household.send(res)
+        .forEach(async ({ socket }) => {
+          socket.send(res)
         })
 
       if (chess.isGameOver()) {
@@ -162,17 +172,29 @@ const MoveEvent: EventFile = {
 
         if (!newElo) return // TODO: send an error res
 
-        const eventRes = JSON.stringify({
+        const rawEventRes: EventRes = {
           type: "GAME_END",
           reason: endReason(chess) ?? "DRAW",
           newElo,
           winnerId: players[winner] ?? null,
-        } satisfies EventRes)
+        }
+        const eventRes = JSON.stringify(rawEventRes)
 
-        households.forEach((household) => household.send(eventRes))
+        households.forEach(({ id, socket }) =>
+          socket.send(
+            players.white == id || players.black == id
+              ? JSON.stringify({
+                  ...rawEventRes,
+                  you: getVictoryStatus(
+                    players.white == id ? "white" : "black",
+                    winner,
+                  ),
+                } satisfies EventRes)
+              : eventRes,
+          ),
+        )
 
         const gameInfo = await redisClient.hgetall(`${gameId}:info`)
-        gameInfo.time
 
         await prisma.game.create({
           data: {
@@ -198,10 +220,10 @@ const MoveEvent: EventFile = {
       // TODO: implement ties and resigns
 
       for (const i in households) {
-        const household = households[i]
+        const { socket } = households[i]
         if (
-          household.readyState !== household.CLOSED &&
-          household.readyState !== household.CLOSING
+          socket.readyState !== socket.CLOSED &&
+          socket.readyState !== socket.CLOSING
         )
           continue
         delete households[i]
