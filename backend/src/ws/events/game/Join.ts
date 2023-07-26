@@ -35,7 +35,7 @@ const JoinEvent: EventFile = {
       await redisClient.hgetall(`${gameId}:players`),
     ])
 
-    if (!pgn || !fen || !time) return // TODO: add an event that makes the player get redirected to main page
+    if (pgn == null || !fen || !time) return // TODO: add an event that makes the player get redirected to main page
 
     const res = JSON.stringify({
       type: "BOARD",

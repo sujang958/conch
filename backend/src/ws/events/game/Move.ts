@@ -17,6 +17,49 @@ const moveEventParam = z.object({
   promotion: z.string().optional(),
 })
 
+const getNewElo = async ({
+  white,
+  black,
+  winner,
+}: {
+  white: string
+  black: string
+  winner: "black" | "white" | "draw"
+}) => {
+  const elo = new EloRank()
+
+  const [whiteUser, blackUser] = await Promise.all([
+    prisma.user.findUnique({ where: { id: white } }),
+    prisma.user.findUnique({
+      where: { id: black },
+    }),
+  ])
+
+  if (!whiteUser || !blackUser) return null // TODO: send an ERROR event
+
+  const whiteElo = whiteUser.elo
+  const blackElo = blackUser.elo
+
+  const expectedWhite = elo.getExpected(whiteElo, blackElo)
+  const expectedBlack = elo.getExpected(blackElo, whiteElo)
+
+  let newWhiteElo = whiteElo
+  let newBlackElo = blackElo
+
+  if (winner == "draw") {
+    newWhiteElo = elo.updateRating(expectedWhite, 0.5, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 0.5, blackElo)
+  } else if (winner == "white") {
+    newWhiteElo = elo.updateRating(expectedWhite, 1, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 0, blackElo)
+  } else {
+    newWhiteElo = elo.updateRating(expectedWhite, 0, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 1, blackElo)
+  }
+
+  return { white: newWhiteElo, black: newBlackElo }
+}
+
 const MoveEvent: EventFile = {
   name: "MOVE",
   execute: async ({ ws, user }, arg) => {
@@ -104,34 +147,31 @@ const MoveEvent: EventFile = {
         })
 
       if (chess.isGameOver()) {
-        const elo = new EloRank()
+        // TODO: add logics for resigns
+        const winner = chess.isDraw()
+          ? "draw"
+          : chess.turn() == "b"
+          ? "white"
+          : "black"
 
-        const [white, black] = await Promise.all([
-          prisma.user.findUnique({ where: { id: players.white } }),
-          prisma.user.findUnique({
-            where: { id: players.black },
-          }),
-        ])
+        const newElo = await getNewElo({
+          white: players.white,
+          black: players.black,
+          winner,
+        })
 
-        if (!white || !black) return // TODO: send an ERROR event
-
-        const whiteElo = white.elo
-        const blackElo = black.elo
-
-        const expectedWhite = elo.getExpected(whiteElo, blackElo)
-        const expectedBlack = elo.getExpected(blackElo, whiteElo)
-
-        if (!chess.isDraw()) {
-          const newWhiteElo = elo.updateRating(expectedWhite, 0.5, whiteElo)
-          const newBlackElo = elo.updateRating(expectedBlack, 0.5, blackElo)
-        } else {
-          
-        }
+        if (!newElo) return // TODO: send an error res
 
         const eventRes = JSON.stringify({
           type: "GAME_END",
           reason: endReason(chess) ?? "DRAW",
+          newElo,
+          winnerId: players[winner] ?? null,
         } satisfies EventRes)
+
+        households.forEach((household) => household.send(eventRes))
+
+        return
       }
 
       // TODO: implement ties and resigns
