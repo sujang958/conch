@@ -24,17 +24,16 @@ model User {
 
 model Game {
   id        String   @id @default(uuid())
-  fan       String
   pgn       String
   time      Int
   increment Int
-  createdAt DateTime @default(now())
+  endedAt   DateTime @default(now())
 
   white   User   @relation("white", fields: [whiteId], references: [id])
   black   User   @relation("black", fields: [blackId], references: [id])
   whiteId String
   blackId String
 
-  winner   User   @relation("won", fields: [winnerId], references: [id])
-  winnerId String
+  winner   User?   @relation("won", fields: [winnerId], references: [id])
+  winnerId String?
 }
