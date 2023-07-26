@@ -40,6 +40,13 @@
 	let ws: WebSocket
 	let myColor: "white" | "black" = "white"
 
+	let gameEnded: boolean = false
+	let endReason: string | null = null
+	let newElo: { now: number; change: number } | null = null
+	let won: boolean | null = null
+
+	// TODO: add supports for spectators
+
 	onMount(() => {
 		ws = new WebSocket("ws://localhost:3000/ws/game")
 
@@ -61,8 +68,11 @@
 					board = game.board()
 					break
 				case "GAME_END":
+					won = event.you !== "DRAW" ? event.you == "WON" : null
+					endReason = event.reason
+					newElo = event.newElo[myColor]
+					gameEnded = true
 					break
-
 				default:
 					break
 			}
@@ -102,29 +112,31 @@
 	}
 </script>
 
-<div class="hidden grid place-items-center fixed top-0 bottom-0 right-0 left-0 h-screen z-50">
-	<div class="rounded-lg bg-neutral-50 py-5 px-6 flex flex-col items-center">
-		<p class="text-3xl font-bold">Lost</p>
-		<p class="text-base">by checkmate</p>
-		<div class="py-8 flex flex-col items-center">
-			<p class="text-4xl font-bold">1444</p>
-			<p class="text-lg text-red-400 font-medium -mt-1">-24</p>
-		</div>
-		<div class="py-2" />
-		<div class="flex flex-row items-center justify-between gap-x-2.5">
-			<button
-				type="button"
-				class="bg-neutral-950 text-white font-semibold text-sm rounded-lg px-4 py-2"
-				>New game</button
-			>
-			<button
-				type="button"
-				class="bg-neutral-200 text-black font-semibold text-sm rounded-lg px-4 py-2"
-				>Go lobby</button
-			>
+{#if gameEnded && newElo}
+	<div class="grid place-items-center fixed top-0 bottom-0 right-0 left-0 h-screen z-50">
+		<div class="rounded-lg bg-neutral-50 py-5 px-6 flex flex-col items-center">
+			<p class="text-3xl font-bold">{won != null ? (won ? "Won" : "Lost") : "Draw"}</p>
+			<p class="text-base">by {endReason ?? "unknown issues"}</p>
+			<div class="py-8 flex flex-col items-center">
+				<p class="text-4xl font-bold">{newElo.now}</p>
+				<p class="text-lg {newElo.change >= 0 ? "text-blue-500" : "text-red-400"} font-medium -mt-1">{newElo.change}</p>
+			</div>
+			<div class="py-2" />
+			<div class="flex flex-row items-center justify-between gap-x-2.5">
+				<button
+					type="button"
+					class="bg-neutral-950 text-white font-semibold text-sm rounded-lg px-4 py-2"
+					>New game</button
+				>
+				<button
+					type="button"
+					class="bg-neutral-200 text-black font-semibold text-sm rounded-lg px-4 py-2"
+					>Go lobby</button
+				>
+			</div>
 		</div>
 	</div>
-</div>
+{/if}
 
 <div
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-950 text-white py-6 gap-x-8"

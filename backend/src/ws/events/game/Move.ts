@@ -172,10 +172,41 @@ const MoveEvent: EventFile = {
 
         if (!newElo) return // TODO: send an error res
 
+        const [white, black] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: players.white },
+          }),
+          prisma.user.findUnique({
+            where: { id: players.black },
+          }),
+        ])
+
+        if (!white || !black) return // TODO: up
+
+        await Promise.all([
+          prisma.user.update({
+            where: { id: players.white },
+            data: { elo: newElo.white },
+          }),
+          prisma.user.update({
+            where: { id: players.black },
+            data: { elo: newElo.black },
+          }),
+        ])
+
         const rawEventRes: EventRes = {
           type: "GAME_END",
           reason: endReason(chess) ?? "DRAW",
-          newElo,
+          newElo: {
+            white: {
+              now: newElo.white,
+              change: newElo.white - white.elo,
+            },
+            black: {
+              now: newElo.black,
+              change: newElo.black - black.elo,
+            },
+          },
           winnerId: players[winner] ?? null,
         }
         const eventRes = JSON.stringify(rawEventRes)

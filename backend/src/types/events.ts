@@ -49,8 +49,14 @@ export const eventRes = z.union([
       .union([z.literal("WON"), z.literal("LOST"), z.literal("DRAW")])
       .nullish(),
     newElo: z.object({
-      white: z.number(),
-      black: z.number(),
+      white: z.object({
+        now: z.number(),
+        change: z.number(),
+      }),
+      black: z.object({
+        now: z.number(),
+        change: z.number(),
+      }),
     }),
   }),
 ])
