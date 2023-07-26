@@ -28,27 +28,15 @@ const getVictoryStatus = (
 }
 
 const getNewElo = async ({
-  white,
-  black,
+  whiteElo,
+  blackElo,
   winner,
 }: {
-  white: string
-  black: string
+  whiteElo: number
+  blackElo: number
   winner: "black" | "white" | "draw"
 }) => {
   const elo = new EloRank()
-
-  const [whiteUser, blackUser] = await Promise.all([
-    prisma.user.findUnique({ where: { id: white } }),
-    prisma.user.findUnique({
-      where: { id: black },
-    }),
-  ])
-
-  if (!whiteUser || !blackUser) return null // TODO: send an ERROR event
-
-  const whiteElo = whiteUser.elo
-  const blackElo = blackUser.elo
 
   const expectedWhite = elo.getExpected(whiteElo, blackElo)
   const expectedBlack = elo.getExpected(blackElo, whiteElo)
@@ -165,25 +153,16 @@ const MoveEvent: EventFile = {
           : "black"
 
         const newElo = await getNewElo({
-          white: players.white,
-          black: players.black,
+          whiteElo: Number(players.whiteElo),
+          blackElo: Number(players.blackElo),
           winner,
         })
 
         if (!newElo) return // TODO: send an error res
 
-        const [white, black] = await Promise.all([
-          prisma.user.findUnique({
-            where: { id: players.white },
-          }),
-          prisma.user.findUnique({
-            where: { id: players.black },
-          }),
-        ])
+        const gameInfo = await redisClient.hgetall(`${gameId}:info`)
 
-        if (!white || !black) return // TODO: up
-
-        await Promise.all([
+        prisma.$transaction([
           prisma.user.update({
             where: { id: players.white },
             data: { elo: newElo.white },
@@ -191,6 +170,19 @@ const MoveEvent: EventFile = {
           prisma.user.update({
             where: { id: players.black },
             data: { elo: newElo.black },
+          }),
+          prisma.game.create({
+            data: {
+              increment: Number(gameInfo.increment),
+              time: Number(gameInfo.time),
+              createdAt: new Date(Number(gameInfo.createdAt)),
+              pgn: chess.pgn(),
+              black: { connect: { id: players.black } },
+              white: { connect: { id: players.white } },
+              ...(players[winner] && {
+                winner: { connect: { id: players[winner] } },
+              }),
+            },
           }),
         ])
 
@@ -200,11 +192,11 @@ const MoveEvent: EventFile = {
           newElo: {
             white: {
               now: newElo.white,
-              change: newElo.white - white.elo,
+              change: newElo.white - Number(players.whiteElo), // TODO: maybe add a NaN filter
             },
             black: {
               now: newElo.black,
-              change: newElo.black - black.elo,
+              change: newElo.black - Number(players.blackElo),
             },
           },
           winnerId: players[winner] ?? null,
@@ -224,22 +216,6 @@ const MoveEvent: EventFile = {
               : eventRes,
           ),
         )
-
-        const gameInfo = await redisClient.hgetall(`${gameId}:info`)
-
-        await prisma.game.create({
-          data: {
-            increment: Number(gameInfo.increment),
-            time: Number(gameInfo.time),
-            createdAt: new Date(Number(gameInfo.createdAt)),
-            pgn: chess.pgn(),
-            black: { connect: { id: players.black } },
-            white: { connect: { id: players.white } },
-            ...(players[winner] && {
-              winner: { connect: { id: players[winner] } },
-            }),
-          },
-        })
 
         const keys = await redisClient.keys(`${gameId}:*`)
 

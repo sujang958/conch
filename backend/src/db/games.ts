@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid"
 import { redisClient } from "./redis.js"
 import { Chess } from "chess.js"
+import prisma from "../../prisma/prisma.js"
 
 export const createGame = async ({
   players,
@@ -27,13 +28,28 @@ export const createGame = async ({
   const gameId = `game:${id}`
   const board = new Chess()
 
+  const coloredPlayers =
+    Math.random() > 0.5
+      ? { white: players[0], black: players[1] }
+      : { white: players[1], black: players[0] }
+
+  const [white, black] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: coloredPlayers.white },
+    }),
+    prisma.user.findUnique({
+      where: { id: coloredPlayers.black },
+    }),
+  ])
+
+  if (!white || !black) return null
+
   await Promise.all([
-    redisClient.hset(
-      `${gameId}:players`,
-      Math.random() > 0.5
-        ? { white: players[0], black: players[1] }
-        : { white: players[1], black: players[0] },
-    ),
+    redisClient.hset(`${gameId}:players`, {
+      ...coloredPlayers,
+      whiteElo: white.elo,
+      blackElo: black.elo,
+    }),
     redisClient.set(`${gameId}:fen`, board.fen()),
     redisClient.set(`${gameId}:pgn`, board.pgn()),
     redisClient.hset(`${gameId}:info`, {

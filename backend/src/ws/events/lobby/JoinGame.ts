@@ -15,6 +15,7 @@ const joinGameParam = z.object({
 })
 
 const INT4_MAX = 2_147_483_647
+const ELO_DEVIATION = 250
 
 const JoinGameEvent: EventFile = {
   name: "JOIN_GAME",
@@ -62,8 +63,8 @@ const JoinGameEvent: EventFile = {
       .filter(([id, _]) => id !== userInfo.id)
       .findIndex(
         ([_, elo]) =>
-          userInfo.elo - 200 <= Number(elo) &&
-          Number(elo) <= userInfo.elo + 200,
+          userInfo.elo - ELO_DEVIATION <= Number(elo) &&
+          Number(elo) <= userInfo.elo + ELO_DEVIATION,
       )
 
     if (availableUserIndex < 0) {
@@ -82,6 +83,8 @@ const JoinGameEvent: EventFile = {
       increment: parsedArg.data.increment,
       time: parsedArg.data.time,
     })
+
+    if (!gameId) return // TODO: send an ERROR event res
 
     const user1 = individuals.get(user.id)
     const user2 = individuals.get(availableUserId.toString())

@@ -17,6 +17,7 @@
 	let castleAudio: HTMLAudioElement
 	let moveAudio: HTMLAudioElement
 	let takeAudio: HTMLAudioElement
+	let endAudio: HTMLAudioElement
 
 	const playSound = (audio: HTMLAudioElement) => {
 		if (!audio.paused) {
@@ -68,6 +69,7 @@
 					board = game.board()
 					break
 				case "GAME_END":
+					playSound(endAudio)
 					won = event.you !== "DRAW" ? event.you == "WON" : null
 					endReason = event.reason
 					newElo = event.newElo[myColor]
@@ -95,6 +97,7 @@
 		takeAudio = new Audio("/sounds/take.aac")
 		castleAudio = new Audio("/sounds/castle.aac")
 		moveAudio = new Audio("/sounds/move.aac")
+		endAudio = new Audio("/sounds/end.mp3")
 	})
 
 	const movePiece = (): boolean => {
@@ -119,7 +122,13 @@
 			<p class="text-base">by {endReason ?? "unknown issues"}</p>
 			<div class="py-8 flex flex-col items-center">
 				<p class="text-4xl font-bold">{newElo.now}</p>
-				<p class="text-lg {newElo.change >= 0 ? "text-blue-500" : "text-red-400"} font-medium -mt-1">{newElo.change}</p>
+				<p
+					class="text-base -mt-1 {newElo.change >= 0
+						? 'text-green-600 before:content-["+"]'
+						: 'text-red-400'}"
+				>
+					{newElo.change}
+				</p>
 			</div>
 			<div class="py-2" />
 			<div class="flex flex-row items-center justify-between gap-x-2.5">
