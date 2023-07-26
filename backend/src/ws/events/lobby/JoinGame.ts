@@ -40,8 +40,6 @@ const JoinGameEvent: EventFile = {
       }),
     )
 
-    console.log(searched)
-
     if (searched.includes(false)) {
       // TODO: send an ERROR event and a QUEUE event
       return
@@ -75,6 +73,8 @@ const JoinGameEvent: EventFile = {
     }
 
     const [availableUserId, _] = users[availableUserIndex]
+
+    console.log(availableUserId)
 
     await redisClient.lset(queueId, availableUserIndex, "DEL")
     await redisClient.lrem(queueId, 0, "DEL")

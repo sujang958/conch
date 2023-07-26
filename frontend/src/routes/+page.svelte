@@ -1,14 +1,26 @@
 <script lang="ts">
+	import { goto } from "$app/navigation"
 	import Board from "$lib/Board.svelte"
-	import type { Move } from "$lib/board"
-	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
 
 	onMount(() => {
 		const ws = new WebSocket("ws://localhost:3000/ws/lobby") // TODO: change to env
 
 		ws.addEventListener("message", ({ data }) => {
-			console.log(data)
+			const event = JSON.parse(data)
+
+			switch (event.type) {
+				default:
+					break
+			}
+			switch (event.type) {
+				case "JOIN_GAME":
+					goto(`/live/${event.gameId}`)
+					break
+
+				default:
+					break
+			}
 		})
 
 		ws.addEventListener("open", () => {

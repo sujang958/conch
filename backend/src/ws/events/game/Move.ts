@@ -174,7 +174,7 @@ const MoveEvent: EventFile = {
         const gameInfo = await redisClient.hgetall(`${gameId}:info`)
         gameInfo.time
 
-        const game = await prisma.game.create({
+        await prisma.game.create({
           data: {
             increment: Number(gameInfo.increment),
             time: Number(gameInfo.time),
@@ -187,8 +187,6 @@ const MoveEvent: EventFile = {
             }),
           },
         })
-
-        console.log(game)
 
         const keys = await redisClient.keys(`${gameId}:*`)
 
