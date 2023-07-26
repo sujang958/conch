@@ -14,6 +14,8 @@ const joinGameParam = z.object({
   increment: z.number({ description: "in seconds" }),
 })
 
+const INT4_MAX = 2_147_483_647
+
 const JoinGameEvent: EventFile = {
   name: "JOIN_GAME",
   execute: async ({ user, socket, ws }, arg) => {
@@ -22,6 +24,9 @@ const JoinGameEvent: EventFile = {
     const parsedArg = joinGameParam.safeParse(JSON.parse(arg))
 
     if (!parsedArg.success) return
+    if (parsedArg.data.time <= 0 || parsedArg.data.increment < 0) return
+    if (parsedArg.data.time > INT4_MAX || parsedArg.data.increment > INT4_MAX)
+      return // TODO: send an ERROR event res
 
     const allQueues = await redisClient.keys("queue:*")
     const searched = await Promise.all(
