@@ -7,6 +7,7 @@
 	export let onMove: ((move: Move) => any) | null = null
 	export let game: Chess = new Chess()
 	export let board = game.board()
+	export let history: string[] = []
 	export let colorFor: "white" | "black" = "white"
 	export let allowPlayingAlone: boolean = false
 
@@ -24,8 +25,6 @@
 	let draggingPiece: HTMLImageElement | null = null
 	let draggingPieceCopy: HTMLImageElement | null = null
 
-	let history: string[] = []
-
 	let move: Move = { from: "", to: "" }
 	let promotionWindow: HTMLDivElement
 	let isPromoting = false
@@ -34,13 +33,21 @@
 	let moveAudio: HTMLAudioElement
 	let takeAudio: HTMLAudioElement
 
-	const playSound = (audio: HTMLAudioElement) => {
+	const playAudio = (audio: HTMLAudioElement) => {
 		if (!audio.paused) {
 			audio.currentTime = 0
 			audio.play()
 		} else {
 			audio.play()
 		}
+	}
+
+	const playAudioByMove = (move: string) => {
+		if (move.includes("x")) playAudio(takeAudio)
+		else if (move.includes("O-O")) {
+			playAudio(moveAudio)
+			setTimeout(playAudio.bind(null, moveAudio), 50)
+		} else playAudio(moveAudio)
 	}
 
 	const onDrop = (targetSquare: HTMLDivElement) => {
@@ -89,7 +96,10 @@
 
 			if (!targetSquare) return
 
+			console.log(draggingPieceCopy, "Copy")
+
 			onDrop(targetSquare)
+
 			draggingPieceCopy?.remove()
 			draggingPiece.parentElement?.classList.remove("brightness-75")
 			draggingPiece = null
@@ -121,11 +131,7 @@
 			}
 			const { san } = game.move(move)
 
-			if (san.includes("x")) playSound(takeAudio)
-			else if (san.includes("O-O")) {
-				playSound(moveAudio)
-				setTimeout(playSound.bind(null, moveAudio), 50)
-			} else playSound(moveAudio)
+			playAudioByMove(san)
 
 			board = game.board()
 
@@ -241,6 +247,11 @@
 						on:mousedown={(event) => {
 							if (!(event.target instanceof HTMLImageElement)) return
 							if (!event.target.classList.contains("piece")) return
+
+							if (draggingPieceCopy) {
+								draggingPieceCopy.remove()
+								draggingPiece = null
+							}
 
 							draggingPiece = event.target
 							draggingPiece.parentElement?.classList.add("brightness-75")

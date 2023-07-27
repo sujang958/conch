@@ -2,11 +2,8 @@
 	import { page } from "$app/stores"
 	import Board from "$lib/Board.svelte"
 	import PlayerCard from "$lib/PlayerCard.svelte"
-	import { getSquare } from "$lib/board"
-	import { toReversed } from "$lib/utils"
 	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
-	import { flip } from "svelte/animate"
 
 	const game = new Chess()
 
@@ -68,6 +65,7 @@
 					if (event?.for) myColor = event.for
 
 					board = game.board()
+					history = game.history()
 					break
 				case "GAME_END":
 					playSound(endAudio)
@@ -110,8 +108,6 @@
 			console.log(String(e))
 
 			return false
-		} finally {
-			history = [...game.history()]
 		}
 	}
 </script>
@@ -154,6 +150,7 @@
 	<Board
 		{game}
 		{board}
+		{history}
 		colorFor={myColor}
 		onMove={(_move) => {
 			move = _move
@@ -165,7 +162,7 @@
 		<PlayerCard />
 		<div class="grid grid-cols-2 gap-2">
 			{#each history as move}
-					{move}
+				<p>{move}</p>
 			{/each}
 		</div>
 		<PlayerCard settingsButtonVisible />
