@@ -59,6 +59,10 @@ export const eventRes = z.union([
       }),
     }),
   }),
+  z.object({
+    type: z.literal("DRAW_REQUESTED"),
+    requestedBy: z.string(),
+  })
 ])
 
 export type EventRes = z.infer<typeof eventRes>
