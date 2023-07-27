@@ -26,15 +26,11 @@ const DrawEvent: EventFile = {
     )
       return
 
-    const [pgn, fen, time, players, drawRequestedBy] = await Promise.all([
-      await redisClient.get(`${gameId}:pgn`),
-      await redisClient.get(`${gameId}:fen`),
-      await redisClient.hgetall(`${gameId}:time`),
+    const [players, drawRequestedBy] = await Promise.all([
       await redisClient.hgetall(`${gameId}:players`),
       await redisClient.get(`${gameId}:draw_requested_by`),
     ])
 
-    if (pgn == null || !fen || !time) return
     if (players.white !== user.id && players.black !== user.id) return
     if (user.id == drawRequestedBy) return
 

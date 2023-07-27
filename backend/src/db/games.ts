@@ -7,6 +7,37 @@ import { gameHouseholds } from "../ws/events/rooms.js"
 import { EventRes } from "../types/events.js"
 import EloRank from "elo-rank"
 
+export const getNewElo = async ({
+  whiteElo,
+  blackElo,
+  winner,
+}: {
+  whiteElo: number
+  blackElo: number
+  winner: "black" | "white" | "draw"
+}) => {
+  const elo = new EloRank()
+
+  const expectedWhite = elo.getExpected(whiteElo, blackElo)
+  const expectedBlack = elo.getExpected(blackElo, whiteElo)
+
+  let newWhiteElo = whiteElo
+  let newBlackElo = blackElo
+
+  if (winner == "draw") {
+    newWhiteElo = elo.updateRating(expectedWhite, 0.5, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 0.5, blackElo)
+  } else if (winner == "white") {
+    newWhiteElo = elo.updateRating(expectedWhite, 1, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 0, blackElo)
+  } else {
+    newWhiteElo = elo.updateRating(expectedWhite, 0, whiteElo)
+    newBlackElo = elo.updateRating(expectedBlack, 1, blackElo)
+  }
+
+  return { white: newWhiteElo, black: newBlackElo }
+}
+
 export const createGame = async ({
   players,
   time,
@@ -109,4 +140,56 @@ export const endReason = (chess: Chess) => {
   if (chess.isCheckmate()) return "CHECKMATE"
 
   return null
+}
+
+export const finishGame = async ({
+  gameId,
+  players,
+  winner,
+  reason,
+  newElo
+}: {
+  gameId: string
+  players: Record<string, string>
+  winner: "white" | "black" | "draw"
+  reason: Extract<EventRes, { type: "GAME_END" }>["reason"]
+  newElo: Awaited<ReturnType<typeof getNewElo>>
+}) => {
+  if (!newElo) return null // TODO: send an error res
+
+  const gameInfo = await redisClient.hgetall(`${gameId}:info`)
+  const pgn = await redisClient.get(`${gameId}:pgn`)
+
+  if (pgn == null) return null
+
+  const keys = await redisClient.keys(`${gameId}:*`)
+
+  redisClient.del(keys)
+
+  const [_, __, game] = await prisma.$transaction([
+    prisma.user.update({
+      where: { id: players.white },
+      data: { elo: newElo.white },
+    }),
+    prisma.user.update({
+      where: { id: players.black },
+      data: { elo: newElo.black },
+    }),
+    prisma.game.create({
+      data: {
+        increment: Number(gameInfo.increment),
+        time: Number(gameInfo.time),
+        reason,
+        createdAt: new Date(Number(gameInfo.createdAt)),
+        pgn,
+        black: { connect: { id: players.black } },
+        white: { connect: { id: players.white } },
+        ...(players[winner] && {
+          winner: { connect: { id: players[winner] } },
+        }),
+      },
+    }),
+  ])
+
+  return game.id
 }
