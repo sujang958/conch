@@ -36,6 +36,12 @@ export const eventRes = z.union([
     for: z.union([z.literal("white"), z.literal("black")]).nullish(),
   }),
   z.object({
+    type: z.literal("TIME"),
+    gameId: z.string(),
+    white: z.number(),
+    black: z.number(),
+  }),
+  z.object({
     type: z.literal("GAME_END"),
     reason: z.union([
       z.literal("STALEMATE"),
@@ -43,6 +49,7 @@ export const eventRes = z.union([
       z.literal("CHECKMATE"),
       z.literal("DRAW"),
       z.literal("INSUFFICIENT_MATERIAL"),
+      z.literal("RESIGN"),
     ]),
     winnerId: z.string().nullish(),
     you: z
@@ -61,8 +68,14 @@ export const eventRes = z.union([
   }),
   z.object({
     type: z.literal("DRAW_REQUESTED"),
+    gameId: z.string(),
     requestedBy: z.string(),
-  })
+  }),
+  z.object({
+    type: z.literal("DRAW_RESULT"),
+    gameId: z.string(),
+    accepted: z.boolean(),
+  }),
 ])
 
 export type EventRes = z.infer<typeof eventRes>

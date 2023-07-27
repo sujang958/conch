@@ -2,6 +2,10 @@ import { nanoid } from "nanoid"
 import { redisClient } from "./redis.js"
 import { Chess } from "chess.js"
 import prisma from "../../prisma/prisma.js"
+import { getOrCreate } from "../utils/map.js"
+import { gameHouseholds } from "../ws/events/rooms.js"
+import { EventRes } from "../types/events.js"
+import EloRank from "elo-rank"
 
 export const createGame = async ({
   players,
@@ -44,7 +48,35 @@ export const createGame = async ({
 
   if (!white || !black) return null
 
+  const timeInMS = time * 1000
+
+  const interval = setInterval(async () => {
+    const board = new Chess()
+    const pgn = await redisClient.get(`${gameId}:pgn`)
+    if (pgn == null) return
+
+    board.loadPgn(pgn)
+
+    if (board.isGameOver()) return
+
+    if (board.turn() == "w")
+      await redisClient.hincrby(`${gameId}:time`, "white", -100)
+    else await redisClient.hincrby(`${gameId}:time`, "black", -100)
+
+    const households = getOrCreate(gameHouseholds, id, [])
+
+    const eventRes = JSON.stringify({
+      type: "TIME",
+      gameId: id,
+      white: Number(await redisClient.hget(`${gameId}:time`, "white")),
+      black: Number(await redisClient.hget(`${gameId}:time`, "black")),
+    } satisfies EventRes)
+
+    households.forEach(async ({ socket }) => socket.send(eventRes))
+  }, 100)
+
   await Promise.all([
+    redisClient.set(`${gameId}:interval`, interval[Symbol.toPrimitive]()),
     redisClient.hset(`${gameId}:players`, {
       ...coloredPlayers,
       whiteElo: white.elo,
@@ -58,8 +90,8 @@ export const createGame = async ({
       createdAt: Date.now(),
     }),
     redisClient.hset(`${gameId}:time`, {
-      white: time * 1000,
-      black: time * 1000,
+      white: timeInMS,
+      black: timeInMS,
       lastMovedTime: Date.now(),
       increment: increment * 1000,
     }),

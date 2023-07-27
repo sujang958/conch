@@ -25,6 +25,7 @@ model User {
 model Game {
   id        String   @id @default(uuid())
   pgn       String
+  reason    String
   time      Int
   increment Int
   endedAt   DateTime @default(now())

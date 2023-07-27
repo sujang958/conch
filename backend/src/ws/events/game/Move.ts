@@ -161,6 +161,7 @@ const MoveEvent: EventFile = {
         if (!newElo) return // TODO: send an error res
 
         const gameInfo = await redisClient.hgetall(`${gameId}:info`)
+        const reason = endReason(chess) ?? "DRAW"
 
         prisma.$transaction([
           prisma.user.update({
@@ -175,6 +176,7 @@ const MoveEvent: EventFile = {
             data: {
               increment: Number(gameInfo.increment),
               time: Number(gameInfo.time),
+              reason,
               createdAt: new Date(Number(gameInfo.createdAt)),
               pgn: chess.pgn(),
               black: { connect: { id: players.black } },
@@ -188,7 +190,7 @@ const MoveEvent: EventFile = {
 
         const rawEventRes: EventRes = {
           type: "GAME_END",
-          reason: endReason(chess) ?? "DRAW",
+          reason,
           newElo: {
             white: {
               now: newElo.white,

@@ -3,7 +3,7 @@
 	import Board from "$lib/Board.svelte"
 	import PlayerCard from "$lib/PlayerCard.svelte"
 	import { Chess } from "chess.js"
-	import { onMount } from "svelte"
+	import { onDestroy, onMount } from "svelte"
 
 	const game = new Chess()
 
@@ -43,6 +43,10 @@
 	let endReason: string | null = null
 	let newElo: { now: number; change: number } | null = null
 	let won: boolean | null = null
+	/**
+	 * in seconds
+	 */
+	let time: { white: number; black: number } = { white: 0, black: 0 }
 
 	// TODO: add supports for spectators
 
@@ -58,6 +62,8 @@
 				case "BOARD":
 					game.load(event.fen)
 					game.loadPgn(event.pgn)
+
+					time = { white: event.time.white / 1000, black: event.time.black / 1000 }
 
 					const san = game.history().at(-1)
 					playSoundByMove(san ?? "")
@@ -92,11 +98,25 @@
 		})
 	})
 
+	let timer: NodeJS.Timer
+
 	onMount(() => {
 		takeAudio = new Audio("/sounds/take.aac")
 		castleAudio = new Audio("/sounds/castle.aac")
 		moveAudio = new Audio("/sounds/move.aac")
 		endAudio = new Audio("/sounds/end.mp3")
+
+		timer = setInterval(() => {
+			if (game.isGameOver()) return
+
+			const turnFullname = game.turn() == "w" ? "white" : "black"
+			let targetTime = time[turnFullname]
+			time = { ...time, [turnFullname]: (targetTime -= 1) }
+		}, 1000)
+	})
+
+	onDestroy(() => {
+		clearInterval(timer)
 	})
 
 	const movePiece = (): boolean => {
@@ -109,6 +129,20 @@
 
 			return false
 		}
+	}
+
+	const convertToMMSS = (seconds: number) => {
+		const minutes = Math.floor(seconds / 60)
+		const remainingSeconds = seconds % 60
+
+		const formattedMinutes = String(minutes).padStart(2, "0")
+		const formattedSeconds = String(
+			minutes <= 0 && remainingSeconds < 10
+				? remainingSeconds.toFixed(2)
+				: Math.round(remainingSeconds)
+		).padStart(2, "0")
+
+		return `${formattedMinutes}:${formattedSeconds}`
 	}
 </script>
 
@@ -159,13 +193,28 @@
 	/>
 
 	<div class="bg-neutral-900 rounded-xl w-1/6 p-4 flex flex-col justify-between h-96">
-		<PlayerCard />
-		<div class="grid grid-cols-2 gap-2">
+		<PlayerCard>
+			<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
+				{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
+			</div>
+		</PlayerCard>
+
+		<div class="grid grid-cols-2 gap-2 overflow-auto py-4">
 			{#each history as move}
 				<p>{move}</p>
 			{/each}
 		</div>
-		<PlayerCard settingsButtonVisible />
+
+		<PlayerCard>
+			<div
+				class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
+				(myColor == 'white' ? 'w' : 'b')
+					? 'bg-black text-neutral-700'
+					: ''}"
+			>
+				{convertToMMSS(time[myColor])}
+			</div>
+		</PlayerCard>
 	</div>
 </div>
 

@@ -26,8 +26,8 @@ const main = async () => {
   // console.log(
   //   await createGame({
   //     players: ["clkc0e1ii0000uv3wcgiv54yd", "clkj3np0o0000uv8kf3qiwzaj"],
-  //     increment: 3000,
-  //     time: 2_147_483_647,
+  //     increment: 2,
+  //     time: 60 * 3,
   //   }),
   // )
 
