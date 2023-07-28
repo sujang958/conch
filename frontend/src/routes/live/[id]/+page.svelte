@@ -49,6 +49,7 @@
 	let time: { white: number; black: number } = { white: 0, black: 0 }
 
 	// TODO: add supports for spectators
+	// TODO: add buttons for resigning, requesting a draw
 
 	onMount(() => {
 		ws = new WebSocket("ws://localhost:3000/ws/game")
@@ -192,7 +193,7 @@
 		}}
 	/>
 
-	<div class="bg-neutral-900 rounded-xl w-1/6 p-4 flex flex-col justify-between h-96">
+	<div class="bg-neutral-900 rounded-xl w-1/6 px-4 pt-4 pb-2 flex flex-col justify-between h-96">
 		<PlayerCard>
 			<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
 				{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
@@ -215,6 +216,18 @@
 				{convertToMMSS(time[myColor])}
 			</div>
 		</PlayerCard>
+		<div class="flex flex-row items-center justify-evenly -mt-6 gap-x-2 w-full">
+			<button
+				type="button"
+				class="text-center flex-1 p-2 rounded-lg font-medium hover:bg-white/5 transition duration-200"
+				>Draw</button
+			>
+			<button
+				type="button"
+				class="text-center flex-1 p-2 rounded-lg font-medium hover:bg-white/5 transition duration-200"
+				>Resign</button
+			>
+		</div>
 	</div>
 </div>
 

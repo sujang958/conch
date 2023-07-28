@@ -25,7 +25,7 @@ setupGraphQL(fastify)
 const main = async () => {
   // console.log(
   //   await createGame({
-  //     players: ["clkc0e1ii0000uv3wcgiv54yd", "clkj3np0o0000uv8kf3qiwzaj"],
+  //     players: ["clkl99dy20000uvxglbahswd7", "clkj3np0o0000uv8kf3qiwzaj"],
   //     increment: 2,
   //     time: 60 * 3,
   //   }),
