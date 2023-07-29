@@ -36,12 +36,6 @@ export const eventRes = z.union([
     for: z.union([z.literal("white"), z.literal("black")]).nullish(),
   }),
   z.object({
-    type: z.literal("TIME"),
-    gameId: z.string(),
-    white: z.number(),
-    black: z.number(),
-  }),
-  z.object({
     type: z.literal("GAME_END"),
     reason: z.union([
       z.literal("STALEMATE"),
@@ -75,6 +69,10 @@ export const eventRes = z.union([
     type: z.literal("DRAW_RESULT"),
     gameId: z.string(),
     accepted: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("ERROR"),
+    message: z.string(),
   }),
 ])
 

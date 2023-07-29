@@ -80,34 +80,9 @@ export const createGame = async ({
   if (!white || !black) return null
 
   const timeInMS = time * 1000
-
-  const interval = setInterval(async () => {
-    const board = new Chess()
-    const pgn = await redisClient.get(`${gameId}:pgn`)
-    if (pgn == null) return
-
-    board.loadPgn(pgn)
-
-    if (board.isGameOver()) return
-
-    if (board.turn() == "w")
-      await redisClient.hincrby(`${gameId}:time`, "white", -100)
-    else await redisClient.hincrby(`${gameId}:time`, "black", -100)
-
-    const households = getOrCreate(gameHouseholds, id, [])
-
-    const eventRes = JSON.stringify({
-      type: "TIME",
-      gameId: id,
-      white: Number(await redisClient.hget(`${gameId}:time`, "white")),
-      black: Number(await redisClient.hget(`${gameId}:time`, "black")),
-    } satisfies EventRes)
-
-    households.forEach(async ({ socket }) => socket.send(eventRes))
-  }, 100)
+  const incrementInMS = increment * 1000
 
   await Promise.all([
-    redisClient.set(`${gameId}:interval`, interval[Symbol.toPrimitive]()),
     redisClient.hset(`${gameId}:players`, {
       ...coloredPlayers,
       whiteElo: white.elo,
@@ -124,7 +99,7 @@ export const createGame = async ({
       white: timeInMS,
       black: timeInMS,
       lastMovedTime: Date.now(),
-      increment: increment * 1000,
+      increment: incrementInMS,
     }),
   ])
 
@@ -147,7 +122,7 @@ export const finishGame = async ({
   players,
   winner,
   reason,
-  newElo
+  newElo,
 }: {
   gameId: string
   players: Record<string, string>
@@ -155,7 +130,7 @@ export const finishGame = async ({
   reason: Extract<EventRes, { type: "GAME_END" }>["reason"]
   newElo: Awaited<ReturnType<typeof getNewElo>>
 }) => {
-  if (!newElo) return null // TODO: send an error res
+  if (!newElo) return null
 
   const gameInfo = await redisClient.hgetall(`${gameId}:info`)
   const pgn = await redisClient.get(`${gameId}:pgn`)
@@ -164,7 +139,7 @@ export const finishGame = async ({
 
   const keys = await redisClient.keys(`${gameId}:*`)
 
-  redisClient.del(keys)
+  redisClient.del(...keys)
 
   const [_, __, game] = await prisma.$transaction([
     prisma.user.update({

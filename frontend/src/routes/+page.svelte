@@ -8,6 +8,8 @@
 
 		ws.addEventListener("message", ({ data }) => {
 			const event = JSON.parse(data)
+			
+			console.log(event)
 
 			switch (event.type) {
 				default:
@@ -26,54 +28,12 @@
 		ws.addEventListener("open", () => {
 			ws.send(
 				`JOIN_GAME ${JSON.stringify({
-					time: 1200000,
-					increment: 1000
+					time: 60 * 15,
+					increment: 10
 				})}`
 			)
 		})
 	})
-
-	// const game = new Chess()
-
-	// let castleAudio: HTMLAudioElement
-	// let moveAudio: HTMLAudioElement
-	// let takeAudio: HTMLAudioElement
-
-	// const playSound = (audio: HTMLAudioElement) => {
-	// 	if (!audio.paused) {
-	// 		audio.currentTime = 0
-	// 		audio.play()
-	// 	} else {
-	// 		audio.play()
-	// 	}
-	// }
-
-	// const playSoundByMove = (move: string) => {
-	// 	if (move.includes("x")) playSound(takeAudio)
-	// 	else if (move.includes("O-O")) {
-	// 		playSound(moveAudio)
-	// 		setTimeout(playSound.bind(null, moveAudio), 50)
-	// 	} else playSound(moveAudio)
-	// }
-
-	// onMount(() => {
-	// 	takeAudio = new Audio("/sounds/take.aac")
-	// 	castleAudio = new Audio("/sounds/castle.aac")
-	// 	moveAudio = new Audio("/sounds/move.aac")
-	// })
-
-	// const onMove = (move: Move) => {
-	// 	const { san } = game.move(move)
-
-	// 	if (san.includes("x")) playSound(takeAudio)
-	// 	else if (san.includes("O-O")) {
-	// 		playSound(moveAudio)
-	// 		setTimeout(playSound.bind(null, moveAudio), 50)
-	// 	} else playSound(moveAudio)
-	// }
-
-	// TODO: sepearte into several files
-	// TODO: implement promotions for black
 </script>
 
 <div

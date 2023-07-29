@@ -25,9 +25,9 @@ setupGraphQL(fastify)
 const main = async () => {
   // console.log(
   //   await createGame({
-  //     players: ["clkl99dy20000uvxglbahswd7", "clkj3np0o0000uv8kf3qiwzaj"],
-  //     increment: 2,
-  //     time: 60 * 3,
+  //     players: ["clkl99dy20000uvxglbahswd7", "clknjfhsf0000uv3wzrlahf5x"],
+  //     increment: 10,
+  //     time: 60 * 15,
   //   }),
   // )
 
@@ -40,3 +40,7 @@ const main = async () => {
 }
 
 main()
+
+process.on("uncaughtException", (error) => {
+  console.log(error)
+})

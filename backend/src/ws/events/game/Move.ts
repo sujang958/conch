@@ -114,7 +114,6 @@ const MoveEvent: EventFile = {
         })
 
       if (chess.isGameOver()) {
-        // TODO: add logics for resigns
         const winner = chess.isDraw()
           ? "draw"
           : chess.turn() == "b"

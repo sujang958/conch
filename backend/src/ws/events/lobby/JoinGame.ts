@@ -24,10 +24,27 @@ const JoinGameEvent: EventFile = {
 
     const parsedArg = joinGameParam.safeParse(JSON.parse(arg))
 
-    if (!parsedArg.success) return
-    if (parsedArg.data.time <= 0 || parsedArg.data.increment < 0) return
+    if (!parsedArg.success)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Invalid time settings",
+        } satisfies EventRes),
+      )
+    if (parsedArg.data.time <= 0 || parsedArg.data.increment < 0)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Time and increment can't be negative",
+        } satisfies EventRes),
+      )
     if (parsedArg.data.time > INT4_MAX || parsedArg.data.increment > INT4_MAX)
-      return // TODO: send an ERROR event res
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: `Time and increment can't be greater than ${INT4_MAX}`,
+        } satisfies EventRes),
+      )
 
     const allQueues = await redisClient.keys("queue:*")
     const searched = await Promise.all(
@@ -41,10 +58,13 @@ const JoinGameEvent: EventFile = {
       }),
     )
 
-    if (searched.includes(false)) {
-      // TODO: send an ERROR event and a QUEUE event
-      return
-    }
+    if (searched.includes(false))
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "You're already in a queue",
+        } satisfies EventRes),
+      )
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
@@ -53,7 +73,13 @@ const JoinGameEvent: EventFile = {
       prisma.user.findUnique({ where: { id: user.id } }),
     ])
 
-    if (!userInfo) return
+    if (!userInfo)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "You can't be found in the database",
+        } satisfies EventRes),
+      )
 
     const users = queue
       .map((v) => v.replace(/ /gi, "").split(":"))
@@ -68,8 +94,8 @@ const JoinGameEvent: EventFile = {
       )
 
     if (availableUserIndex < 0) {
-      if (users.filter(([id, _]) => id === userInfo.id).length < 1)
-        await redisClient.rpush(queueId, `${userInfo.id}:${userInfo.elo}`)
+      await redisClient.rpush(queueId, `${userInfo.id}:${userInfo.elo}`)
+
       return true
     }
 
@@ -84,13 +110,31 @@ const JoinGameEvent: EventFile = {
       time: parsedArg.data.time,
     })
 
-    if (!gameId) return // TODO: send an ERROR event res
+    if (!gameId)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Players can't be found",
+        } satisfies EventRes),
+      )
 
     const user1 = individuals.get(user.id)
     const user2 = individuals.get(availableUserId.toString())
 
-    if (!user1 || !user2) return // TODO: send an error event res
-    if (!user1.OPEN || !user2.OPEN) return
+    if (!user1 || !user2)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "Players can't be found",
+        } satisfies EventRes),
+      )
+    if (!user1.OPEN || !user2.OPEN)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "One of the two players disconnected",
+        } satisfies EventRes),
+      )
 
     const res = JSON.stringify({
       type: "JOIN_GAME",

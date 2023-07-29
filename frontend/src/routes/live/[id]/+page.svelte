@@ -44,12 +44,15 @@
 	let newElo: { now: number; change: number } | null = null
 	let won: boolean | null = null
 	/**
-	 * in seconds
+	 * in ms
 	 */
 	let time: { white: number; black: number } = { white: 0, black: 0 }
+	/**
+	 * in ms
+	 */
+	let lastMovedTime = -1
 
 	// TODO: add supports for spectators
-	// TODO: add buttons for resigning, requesting a draw
 
 	onMount(() => {
 		ws = new WebSocket("ws://localhost:3000/ws/game")
@@ -64,7 +67,11 @@
 					game.load(event.fen)
 					game.loadPgn(event.pgn)
 
-					time = { white: event.time.white / 1000, black: event.time.black / 1000 }
+					time = { white: event.time.white, black: event.time.black }
+					lastMovedTime = event.time.lastMovedTime
+
+					const turnFullname = game.turn() == "w" ? "white" : "black"
+					time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
 
 					const san = game.history().at(-1)
 					playSoundByMove(san ?? "")
@@ -109,11 +116,16 @@
 
 		timer = setInterval(() => {
 			if (game.isGameOver()) return
+			if (gameEnded) return
 
 			const turnFullname = game.turn() == "w" ? "white" : "black"
 			let targetTime = time[turnFullname]
-			time = { ...time, [turnFullname]: (targetTime -= 1) }
-		}, 1000)
+
+			time = { ...time, [turnFullname]: targetTime - 100 }
+
+			if (turnFullname == myColor && time[turnFullname] <= 0)
+				ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
+		}, 100)
 	})
 
 	onDestroy(() => {
@@ -132,7 +144,8 @@
 		}
 	}
 
-	const convertToMMSS = (seconds: number) => {
+	const convertToMMSS = (ms: number) => {
+		const seconds = ms / 1000
 		const minutes = Math.floor(seconds / 60)
 		const remainingSeconds = seconds % 60
 
@@ -179,7 +192,7 @@
 	</div>
 {/if}
 
-<div
+<main
 	class="flex flex-row h-screen w-full justify-center items-center bg-neutral-950 text-white py-6 gap-x-8"
 >
 	<Board
@@ -193,43 +206,45 @@
 		}}
 	/>
 
-	<div class="bg-neutral-900 rounded-xl w-1/6 px-4 pt-4 pb-2 flex flex-col justify-between h-96">
-		<PlayerCard>
-			<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
-				{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
-			</div>
-		</PlayerCard>
+	<div class="flex flex-col w-1/6 gap-y-4">
+		<section class="bg-neutral-900 rounded-xl p-4 flex flex-col justify-between h-96">
+			<PlayerCard>
+				<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
+					{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
+				</div>
+			</PlayerCard>
 
-		<div class="grid grid-cols-2 gap-2 overflow-auto py-4">
-			{#each history as move}
-				<p>{move}</p>
-			{/each}
-		</div>
-
-		<PlayerCard>
-			<div
-				class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
-				(myColor == 'white' ? 'w' : 'b')
-					? 'bg-black text-neutral-700'
-					: ''}"
-			>
-				{convertToMMSS(time[myColor])}
+			<div class="grid grid-cols-2 gap-2 overflow-auto py-4">
+				{#each history as move}
+					<p>{move}</p>
+				{/each}
 			</div>
-		</PlayerCard>
-		<div class="flex flex-row items-center justify-evenly -mt-6 gap-x-2 w-full">
+
+			<PlayerCard>
+				<div
+					class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
+					(myColor == 'white' ? 'w' : 'b')
+						? 'bg-black text-neutral-700'
+						: ''}"
+				>
+					{convertToMMSS(time[myColor])}
+				</div>
+			</PlayerCard>
+		</section>
+		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900">
 			<button
 				type="button"
-				class="text-center flex-1 p-2 rounded-lg font-medium hover:bg-white/5 transition duration-200"
-				>Draw</button
+				class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+				>0.5-0.5</button
 			>
 			<button
 				type="button"
-				class="text-center flex-1 p-2 rounded-lg font-medium hover:bg-white/5 transition duration-200"
-				>Resign</button
+				class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+				>0-1</button
 			>
-		</div>
+		</section>
 	</div>
-</div>
+</main>
 
 By &lt;a href=&quot;//commons.wikimedia.org/wiki/User:Cburnett&quot;
 title=&quot;User:Cburnett&quot;&gt;Cburnett&lt;/a&gt; - &lt;span class=&quot;int-own-work&quot;
