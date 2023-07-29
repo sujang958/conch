@@ -5,10 +5,14 @@
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"
 
+	let confirmWindowShown = false
+	let confirmFunction = () => {}
+
 	const game = new Chess()
 
 	let history: string[] = []
 	let board = game.board()
+	let boardInitialized = false
 
 	let move: Exclude<Parameters<typeof game.move>[0], string> = { from: "", to: "" }
 
@@ -73,6 +77,8 @@
 					const turnFullname = game.turn() == "w" ? "white" : "black"
 					time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
 
+					if (!boardInitialized) boardInitialized = true
+
 					const san = game.history().at(-1)
 					playSoundByMove(san ?? "")
 
@@ -117,15 +123,16 @@
 		timer = setInterval(() => {
 			if (game.isGameOver()) return
 			if (gameEnded) return
+			if (!boardInitialized) return
 
 			const turnFullname = game.turn() == "w" ? "white" : "black"
 			let targetTime = time[turnFullname]
 
-			time = { ...time, [turnFullname]: targetTime - 100 }
+			time = { ...time, [turnFullname]: targetTime - 10 }
 
 			if (turnFullname == myColor && time[turnFullname] <= 0)
 				ws.send(`RESIGN ${JSON.stringify({ gameId, reason: "TIMEOUT" })}`)
-		}, 100)
+		}, 10)
 	})
 
 	onDestroy(() => {
@@ -231,16 +238,51 @@
 				</div>
 			</PlayerCard>
 		</section>
-		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900">
+		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative">
+			{#if confirmWindowShown}
+				<div
+					class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 absolute w-full z-10"
+				>
+					<button
+						type="button"
+						on:click={() => {
+							confirmFunction()
+							confirmWindowShown = false
+						}}
+						class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+						>I'm sure</button
+					>
+					<button
+						type="button"
+						on:click={() => {
+							confirmFunction = () => {}
+							confirmWindowShown = false
+						}}
+						class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+						>Nah</button
+					>
+				</div>
+			{/if}
+
 			<button
 				type="button"
 				class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
-				>0.5-0.5</button
+				on:click={() => {
+					confirmFunction = () => {
+						ws.send(`DRAW_REQUEST ${JSON.stringify({ gameId })}`)
+					}
+					confirmWindowShown = true
+				}}>0.5-0.5</button
 			>
 			<button
 				type="button"
 				class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
-				>0-1</button
+				on:click={() => {
+					confirmFunction = () => {
+						ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
+					}
+					confirmWindowShown = true
+				}}>0-1</button
 			>
 		</section>
 	</div>
