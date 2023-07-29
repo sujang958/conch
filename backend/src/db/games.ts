@@ -170,3 +170,29 @@ export const finishGame = async ({
 
   return game.id
 }
+
+export const playerInGameAction = async ({
+  rawGameId,
+  userId,
+}: {
+  rawGameId: string
+  userId: string
+}): Promise<
+  | {
+      color: "white" | "black"
+      gameId: string
+      players: Record<string, string>
+    }
+  | false
+> => {
+  const gameId = `game:${rawGameId}`
+  const players = await redisClient.hgetall(`${gameId}:players`)
+
+  if (players.white !== userId && players.black !== userId) return false
+
+  return {
+    color: players.white == userId ? "white" : "black",
+    gameId,
+    players,
+  }
+}

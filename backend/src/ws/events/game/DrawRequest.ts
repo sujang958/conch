@@ -3,6 +3,7 @@ import { EventFile, EventRes } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
 import { gameHouseholds } from "../rooms.js"
 import { getOrCreate } from "../../../utils/map.js"
+import { playerInGameAction } from "../../../db/games.js"
 
 const drawEventParam = z.object({
   gameId: z.string(),
@@ -14,25 +15,25 @@ const DrawEvent: EventFile = {
     const parsed = drawEventParam.safeParse(JSON.parse(arg))
 
     if (!parsed.success) return
+    if (!user) return
 
     const { gameId: rawGameId } = parsed.data
-    const gameId = `game:${rawGameId}`
 
-    if (!user) return
-    if (
-      socket.readyState == socket.CLOSED ||
-      socket.readyState == socket.CLOSING
-    )
-      return
+    const action = await playerInGameAction({ rawGameId, userId: user.id })
 
-    const players = await redisClient.hgetall(`${gameId}:players`)
+    if (!action)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "You're not players of the game",
+        } satisfies EventRes),
+      )
 
-    if (players.white !== user.id && players.black !== user.id) return
+    const { gameId, players, color } = action
 
     await redisClient.set(`${gameId}:draw_requested_by`, user.id)
 
-    const requestedTo = players.white == user.id ? "black" : "white"
-
+    const requestedTo = color == "white" ? "black" : "white"
     const households = getOrCreate(gameHouseholds, rawGameId, [])
 
     const eventRes = JSON.stringify({

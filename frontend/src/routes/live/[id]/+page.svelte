@@ -132,6 +132,8 @@
 
 			if (turnFullname == myColor && time[turnFullname] <= 0)
 				ws.send(`RESIGN ${JSON.stringify({ gameId, reason: "TIMEOUT" })}`)
+			if (turnFullname !== myColor && time[turnFullname] <= 0)
+				ws.send(`TIMEOUT ${JSON.stringify({ gameId, timeoutPlayerColor: turnFullname })}`)
 		}, 10)
 	})
 
@@ -239,31 +241,6 @@
 			</PlayerCard>
 		</section>
 		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative">
-			{#if confirmWindowShown}
-				<div
-					class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 absolute w-full z-10"
-				>
-					<button
-						type="button"
-						on:click={() => {
-							confirmFunction()
-							confirmWindowShown = false
-						}}
-						class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
-						>I'm sure</button
-					>
-					<button
-						type="button"
-						on:click={() => {
-							confirmFunction = () => {}
-							confirmWindowShown = false
-						}}
-						class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
-						>Nah</button
-					>
-				</div>
-			{/if}
-
 			<button
 				type="button"
 				class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
@@ -284,6 +261,30 @@
 					confirmWindowShown = true
 				}}>0-1</button
 			>
+		</section>
+
+		<section class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown ? 'opacity-100' : 'opacity-0'}">
+			<p class="text-base font-semibold text-center py-3">Are you sure?</p>
+			<div class="flex flex-row items-center justify-evenly">
+				<button
+					type="button"
+					on:click={() => {
+						confirmFunction()
+						confirmWindowShown = false
+					}}
+					class="font-intel-mono rounded-bl-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
+					>I'm sure</button
+				>
+				<button
+					type="button"
+					on:click={() => {
+						confirmFunction = () => {}
+						confirmWindowShown = false
+					}}
+					class="font-intel-mono rounded-br-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
+					>Nah</button
+				>
+			</div>
 		</section>
 	</div>
 </main>

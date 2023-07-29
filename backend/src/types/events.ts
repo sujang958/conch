@@ -68,7 +68,7 @@ export const eventRes = z.union([
     requestedBy: z.string(),
   }),
   z.object({
-    type: z.literal("DRAW_RESULT"),
+    type: z.literal("DRAW_RESPONSE"),
     gameId: z.string(),
     accepted: z.boolean(),
   }),

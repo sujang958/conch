@@ -11,7 +11,7 @@ const drawEventParam = z.object({
 })
 
 const DrawEvent: EventFile = {
-  name: "DRAW_ACCEPT",
+  name: "DRAW_RESPONSE",
   execute: async ({ user, socket, ws }, arg) => {
     const parsed = drawEventParam.safeParse(JSON.parse(arg))
 
@@ -37,27 +37,58 @@ const DrawEvent: EventFile = {
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
 
-    const newElo = await getNewElo({
-      whiteElo: Number(players.whiteElo),
-      blackElo: Number(players.blackElo),
-      winner: "draw",
-    })
+    if (accepted) {
+      const newElo = await getNewElo({
+        whiteElo: Number(players.whiteElo),
+        blackElo: Number(players.blackElo),
+        winner: "draw",
+      })
 
-    finishGame({
-      rawGameId,
-      newElo,
-      players,
-      reason: "DRAW",
-      winner: "draw",
-    })
+      finishGame({
+        rawGameId,
+        newElo,
+        players,
+        reason: "DRAW",
+        winner: "draw",
+      })
+
+      const rawEventRes = {
+        type: "GAME_END",
+        newElo: {
+          white: {
+            now: newElo.white,
+            change: newElo.white - Number(players.whiteElo),
+          },
+          black: {
+            now: newElo.black,
+            change: newElo.black - Number(players.blackElo),
+          },
+        },
+        reason: "DRAW",
+        winnerId: null,
+      } satisfies EventRes
+      const eventRes = JSON.stringify(rawEventRes)
+
+      households
+        .filter(({ id }) => players.white == id || players.black == id)
+        .forEach(({ socket }) =>
+          socket.send(
+            JSON.stringify({
+              ...rawEventRes,
+              you: "DRAW",
+            } satisfies EventRes),
+          ),
+        )
+      households.forEach(({ socket }) => socket.send(eventRes))
+
+      return
+    }
 
     const eventRes = JSON.stringify({
-      type: "DRAW_RESULT",
+      type: "DRAW_RESPONSE",
       accepted,
       gameId: rawGameId,
     } satisfies EventRes)
-
-    // TODO: debug draw
 
     households
       .filter(({ id }) => id == drawRequestedBy)
