@@ -124,7 +124,7 @@
 			time = { ...time, [turnFullname]: targetTime - 100 }
 
 			if (turnFullname == myColor && time[turnFullname] <= 0)
-				ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
+				ws.send(`RESIGN ${JSON.stringify({ gameId, reason: "TIMEOUT" })}`)
 		}, 100)
 	})
 

@@ -34,6 +34,7 @@ const ResignEvent: EventFile = {
     const households = getOrCreate(gameHouseholds, rawGameId, [])
 
     const winner = players.white == user.id ? "black" : "white"
+    const reason = parsed.data.reason ?? "RESIGN"
 
     const newElo = await getNewElo({
       whiteElo: Number(players.whiteElo),
@@ -42,10 +43,10 @@ const ResignEvent: EventFile = {
     })
 
     finishGame({
-      gameId: rawGameId,
+      rawGameId,
       newElo,
       players,
-      reason: parsed.data.reason ?? "RESIGN",
+      reason,
       winner,
     })
 
@@ -61,7 +62,7 @@ const ResignEvent: EventFile = {
           change: newElo.black - Number(players.blackElo),
         },
       },
-      reason: "RESIGN",
+      reason,
       winnerId: players[winner],
     } satisfies EventRes
     const eventRes = JSON.stringify(rawEventRes)

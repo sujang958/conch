@@ -23,13 +23,13 @@ fastify.register(setupWebsocket)
 setupGraphQL(fastify)
 
 const main = async () => {
-  // console.log(
-  //   await createGame({
-  //     players: ["clkl99dy20000uvxglbahswd7", "clknjfhsf0000uv3wzrlahf5x"],
-  //     increment: 1,
-  //     time: 60 * 1,
-  //   }),
-  // )
+  console.log(
+    await createGame({
+      players: ["clkl99dy20000uvxglbahswd7", "clknjfhsf0000uv3wzrlahf5x"],
+      increment: 1,
+      time: 60 * 1,
+    }),
+  )
 
   try {
     const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })

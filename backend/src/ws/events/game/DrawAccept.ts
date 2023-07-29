@@ -3,6 +3,7 @@ import { EventFile, EventRes } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
 import { gameHouseholds } from "../rooms.js"
 import { getOrCreate } from "../../../utils/map.js"
+import { finishGame, getNewElo } from "../../../db/games.js"
 
 const drawEventParam = z.object({
   gameId: z.string(),
@@ -35,6 +36,20 @@ const DrawEvent: EventFile = {
     if (user.id == drawRequestedBy) return
 
     const households = getOrCreate(gameHouseholds, rawGameId, [])
+
+    const newElo = await getNewElo({
+      whiteElo: Number(players.whiteElo),
+      blackElo: Number(players.blackElo),
+      winner: "draw",
+    })
+
+    finishGame({
+      rawGameId,
+      newElo,
+      players,
+      reason: "DRAW",
+      winner: "draw",
+    })
 
     const eventRes = JSON.stringify({
       type: "DRAW_RESULT",

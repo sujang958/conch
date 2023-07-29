@@ -118,19 +118,21 @@ export const endReason = (chess: Chess) => {
 }
 
 export const finishGame = async ({
-  gameId,
+  rawGameId,
   players,
   winner,
   reason,
   newElo,
 }: {
-  gameId: string
+  rawGameId: string
   players: Record<string, string>
   winner: "white" | "black" | "draw"
   reason: Extract<EventRes, { type: "GAME_END" }>["reason"]
   newElo: Awaited<ReturnType<typeof getNewElo>>
 }) => {
   if (!newElo) return null
+
+  const gameId = rawGameId.startsWith("game:") ? rawGameId : `game:${rawGameId}`
 
   const gameInfo = await redisClient.hgetall(`${gameId}:info`)
   const pgn = await redisClient.get(`${gameId}:pgn`)

@@ -128,7 +128,7 @@ const MoveEvent: EventFile = {
         })
 
         finishGame({
-          gameId,
+          rawGameId,
           reason:
             winner == "draw" ? "TIMEOUT VS INSUFFICIENT_MATERIAL" : "TIMEOUT",
           newElo,
@@ -218,7 +218,7 @@ const MoveEvent: EventFile = {
 
         if (!newElo) return // SEND AN ERROR res
 
-        finishGame({ gameId: rawGameId, players, reason, winner, newElo })
+        finishGame({ rawGameId, players, reason, winner, newElo })
 
         const rawEventRes = {
           type: "GAME_END",
