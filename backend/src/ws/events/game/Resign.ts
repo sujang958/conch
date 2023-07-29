@@ -7,6 +7,7 @@ import { finishGame, getNewElo } from "../../../db/games.js"
 
 const resignEventParam = z.object({
   gameId: z.string(),
+  reason: z.literal("TIMEOUT").nullish(),
 })
 
 const ResignEvent: EventFile = {
@@ -40,7 +41,13 @@ const ResignEvent: EventFile = {
       winner,
     })
 
-    finishGame({ gameId: rawGameId, newElo, players, reason: "RESIGN", winner })
+    finishGame({
+      gameId: rawGameId,
+      newElo,
+      players,
+      reason: parsed.data.reason ?? "RESIGN",
+      winner,
+    })
 
     const rawEventRes = {
       type: "GAME_END",

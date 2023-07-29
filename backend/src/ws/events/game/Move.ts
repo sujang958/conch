@@ -9,6 +9,8 @@ import { gameHouseholds } from "../rooms.js"
 import { endReason, finishGame, getNewElo } from "../../../db/games.js"
 import EloRank from "elo-rank"
 import prisma from "../../../../prisma/prisma.js"
+import { Square } from "chess.js"
+import { PieceSymbol } from "chess.js"
 
 const moveEventParam = z.object({
   gameId: z.string(),
@@ -51,6 +53,10 @@ const MoveEvent: EventFile = {
 
       if (pgn === null || !user || !players || !time) return
 
+      const households = getOrCreate(gameHouseholds, rawGameId, [])
+
+      if (households.length < 1) return
+
       const chess = new Chess()
 
       chess.loadPgn(pgn)
@@ -72,7 +78,94 @@ const MoveEvent: EventFile = {
       const newRemainingTime = remainingTime - (now - lastMovedTime) + increment
 
       if (newRemainingTime <= 0) {
-        return // TODO: send a GAME_END event and tell them who's the winner.
+        const opponentColor = turn == "w" ? "black" : "white"
+
+        const opponentPieces: { [key in PieceSymbol]: number } = {
+          b: 0,
+          p: 0,
+          n: 0,
+          r: 0,
+          q: 0,
+          k: 0,
+        }
+
+        chess.board().forEach((squares) => {
+          squares
+            .filter(
+              (
+                square,
+              ): square is Exclude<
+                ReturnType<typeof chess.board>[0][0],
+                null
+              > => square !== null,
+            )
+            .filter(
+              (square) =>
+                square.color == (opponentColor == "white" ? "w" : "b"),
+            )
+            .forEach((square) => {
+              opponentPieces[square.type] += 1
+            })
+        })
+
+        let winner: "draw" | "white" | "black" = "draw"
+
+        if (
+          opponentPieces.r > 0 ||
+          opponentPieces.q > 0 ||
+          opponentPieces.b >= 2 ||
+          opponentPieces.n >= 2 ||
+          (opponentPieces.n >= 1 && opponentPieces.b >= 1) ||
+          opponentPieces.p > 0
+        )
+          winner = opponentColor
+        else winner = "draw"
+
+        const newElo = await getNewElo({
+          whiteElo: Number(players.whiteElo),
+          blackElo: Number(players.blackElo),
+          winner,
+        })
+
+        finishGame({
+          gameId,
+          reason:
+            winner == "draw" ? "TIMEOUT VS INSUFFICIENT_MATERIAL" : "TIMEOUT",
+          newElo,
+          players,
+          winner,
+        })
+
+        const rawEventRes = {
+          type: "GAME_END",
+          newElo: {
+            white: {
+              now: newElo.white,
+              change: newElo.white - Number(players.whiteElo),
+            },
+            black: {
+              now: newElo.black,
+              change: newElo.black - Number(players.blackElo),
+            },
+          },
+          reason: "RESIGN",
+          winnerId: players[winner],
+        } satisfies EventRes
+        const eventRes = JSON.stringify(rawEventRes)
+
+        households
+          .filter(({ id }) => players.white == id || players.black == id)
+          .forEach(({ id, socket }) =>
+            socket.send(
+              JSON.stringify({
+                ...rawEventRes,
+                you: id == players[winner] ? "WON" : "LOST",
+              } satisfies EventRes),
+            ),
+          )
+        households.forEach(({ socket }) => socket.send(eventRes))
+
+        return
       }
 
       chess.move({ from, to, promotion })
@@ -86,10 +179,6 @@ const MoveEvent: EventFile = {
         redisClient.hset(`${gameId}:time`, "lastMovedTime", now),
         redisClient.hset(`${gameId}:time`, turnFullname, newRemainingTime),
       ])
-
-      const households = getOrCreate(gameHouseholds, rawGameId, [])
-
-      if (households.length < 1) return
 
       const res = JSON.stringify({
         type: "BOARD",

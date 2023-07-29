@@ -44,6 +44,8 @@ export const eventRes = z.union([
       z.literal("DRAW"),
       z.literal("INSUFFICIENT_MATERIAL"),
       z.literal("RESIGN"),
+      z.literal("TIMEOUT"),
+      z.literal("TIMEOUT VS INSUFFICIENT_MATERIAL"),
     ]),
     winnerId: z.string().nullish(),
     you: z
