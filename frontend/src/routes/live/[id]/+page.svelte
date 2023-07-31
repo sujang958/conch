@@ -4,9 +4,12 @@
 	import PlayerCard from "$lib/PlayerCard.svelte"
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"
+	import toast from "svelte-french-toast"
 
 	let confirmWindowShown = false
+	let confirmMessage = "Are you sure?"
 	let confirmFunction = () => {}
+	let notConfirmFunction = () => {}
 
 	const game = new Chess()
 
@@ -93,6 +96,16 @@
 					endReason = event.reason
 					newElo = event.newElo[myColor]
 					gameEnded = true
+					break
+				case "DRAW_REQUESTED":
+					confirmMessage = "Opponent requested a draw, do you accept it?"
+					confirmFunction = () => {
+						ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: true })}`)
+					}
+					notConfirmFunction = () => {
+						ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: false })}`)
+					}
+					confirmWindowShown = true
 					break
 				default:
 					break
@@ -240,13 +253,16 @@
 				</div>
 			</PlayerCard>
 		</section>
+
 		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative">
 			<button
 				type="button"
 				class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
 				on:click={() => {
+					confirmMessage = "Request a draw?"
 					confirmFunction = () => {
 						ws.send(`DRAW_REQUEST ${JSON.stringify({ gameId })}`)
+						toast.success("Requested a draw")
 					}
 					confirmWindowShown = true
 				}}>0.5-0.5</button
@@ -255,6 +271,7 @@
 				type="button"
 				class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
 				on:click={() => {
+					confirmMessage = "Are you sure?"
 					confirmFunction = () => {
 						ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
 					}
@@ -263,26 +280,34 @@
 			>
 		</section>
 
-		<section class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown ? 'opacity-100' : 'opacity-0'}">
-			<p class="text-base font-semibold text-center py-3">Are you sure?</p>
+		<section
+			class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown
+				? 'opacity-100'
+				: 'opacity-0'} focus:opacity-100"
+		>
+			<p class="text-base font-medium text-center p-3">{confirmMessage}</p>
 			<div class="flex flex-row items-center justify-evenly">
 				<button
 					type="button"
 					on:click={() => {
 						confirmFunction()
 						confirmWindowShown = false
+						confirmFunction = () => {}
+						notConfirmFunction = () => {}
 					}}
 					class="font-intel-mono rounded-bl-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
-					>I'm sure</button
+					>Yes</button
 				>
 				<button
 					type="button"
 					on:click={() => {
-						confirmFunction = () => {}
+						notConfirmFunction()
 						confirmWindowShown = false
+						confirmFunction = () => {}
+						notConfirmFunction = () => {}
 					}}
 					class="font-intel-mono rounded-br-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
-					>Nah</button
+					>No</button
 				>
 			</div>
 		</section>
