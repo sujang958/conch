@@ -36,7 +36,7 @@ const ClaimTimeoutEvent: EventFile = {
         } satisfies EventRes),
       )
 
-    const { gameId, color } = action
+    const { gameId, color, players } = action
 
     const requestedTo = color == "white" ? "black" : "white"
     const newRemainingTime = await getNewTime({
@@ -45,9 +45,13 @@ const ClaimTimeoutEvent: EventFile = {
       turn: requestedTo,
     })
 
+    console.log("New Remaining Time", newRemainingTime)
+
     if (newRemainingTime > 0) return
 
     const fen = await redisClient.get(`${gameId}:fen`)
+
+    console.log(fen)
 
     if (fen == null)
       return socket.send(
@@ -78,7 +82,7 @@ const ClaimTimeoutEvent: EventFile = {
     sendGameEndEvent({
       rawGameId,
       households,
-      players: await redisClient.hgetall(`${gameId}:players`),
+      players,
       reason,
       winner,
     })

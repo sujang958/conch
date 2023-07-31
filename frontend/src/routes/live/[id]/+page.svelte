@@ -72,13 +72,15 @@
 			switch (event.type) {
 				case "BOARD":
 					game.load(event.fen)
-					game.loadPgn(event.pgn)
+					// game.loadPgn(event.pgn)
 
 					time = { white: event.time.white, black: event.time.black }
 					lastMovedTime = event.time.lastMovedTime
 
-					const turnFullname = game.turn() == "w" ? "white" : "black"
-					time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
+					console.log(time)
+
+					// const turnFullname = game.turn() == "w" ? "white" : "black"
+					// time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
 
 					if (!boardInitialized) boardInitialized = true
 
@@ -133,18 +135,22 @@
 		moveAudio = new Audio("/sounds/move.aac")
 		endAudio = new Audio("/sounds/end.mp3")
 
+		let before = Date.now()
+
 		timer = setInterval(async () => {
-			console.log(Date.now())
 			if (game.isGameOver()) return
 			if (gameEnded) return
 			if (!boardInitialized) return
 
 			const turnFullname = game.turn() == "w" ? "white" : "black"
-			let targetTime = time[turnFullname]
+			const targetTime = time[turnFullname]
 
-			if (targetTime <= 0) return
+			if (targetTime > 0) {
+				const now = Date.now()
 
-			time = { ...time, [turnFullname]: targetTime - 10 }
+				time = { ...time, [turnFullname]: targetTime - (now - before) }
+				before = now
+			}
 
 			if (turnFullname !== myColor && time[turnFullname] <= 0)
 				ws.send(`CLAIM_TIMEOUT ${JSON.stringify({ gameId })}`)
