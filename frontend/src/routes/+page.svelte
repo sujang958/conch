@@ -8,7 +8,7 @@
 
 		ws.addEventListener("message", ({ data }) => {
 			const event = JSON.parse(data)
-			
+
 			console.log(event)
 
 			switch (event.type) {
@@ -28,8 +28,8 @@
 		ws.addEventListener("open", () => {
 			ws.send(
 				`JOIN_GAME ${JSON.stringify({
-					time: 60 * 15,
-					increment: 10
+					time: 60 * 1,
+					increment: 0
 				})}`
 			)
 		})

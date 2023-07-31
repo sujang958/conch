@@ -96,8 +96,6 @@
 
 			if (!targetSquare) return
 
-			console.log(draggingPieceCopy, "Copy")
-
 			onDrop(targetSquare)
 
 			draggingPieceCopy?.remove()

@@ -29,9 +29,8 @@ const getVictoryStatus = (
   winner: "white" | "black" | "draw",
 ) => {
   if (winner == "draw") return "DRAW"
-  if (me == "black")
-    return winner == "white" ? "LOST" : winner == "black" ? "WON" : "DRAW"
-  else return winner == "white" ? "WON" : winner == "black" ? "LOST" : "DRAW"
+  if (me == "black") return winner == "white" ? "LOST" : "WON"
+  else return winner == "white" ? "WON" : "LOST"
 }
 
 const MoveEvent: EventFile = {
@@ -244,7 +243,7 @@ const MoveEvent: EventFile = {
               JSON.stringify({
                 ...rawEventRes,
                 you: getVictoryStatus(
-                  players.white == id ? "white" : "black",
+                  id == players.black ? "black" : "white",
                   winner,
                 ),
               } satisfies EventRes),

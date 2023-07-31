@@ -92,7 +92,7 @@
 					break
 				case "GAME_END":
 					playSound(endAudio)
-					won = event.you !== "DRAW" ? event.you == "WON" : null
+					if (event?.you) won = event.you !== "DRAW" ? event.you == "WON" : null
 					endReason = event.reason
 					newElo = event.newElo[myColor]
 					gameEnded = true
@@ -133,13 +133,16 @@
 		moveAudio = new Audio("/sounds/move.aac")
 		endAudio = new Audio("/sounds/end.mp3")
 
-		timer = setInterval(() => {
+		timer = setInterval(async () => {
+			console.log(Date.now())
 			if (game.isGameOver()) return
 			if (gameEnded) return
 			if (!boardInitialized) return
 
 			const turnFullname = game.turn() == "w" ? "white" : "black"
 			let targetTime = time[turnFullname]
+
+			if (targetTime <= 0) return
 
 			time = { ...time, [turnFullname]: targetTime - 10 }
 

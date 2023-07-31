@@ -26,8 +26,8 @@ const main = async () => {
   console.log(
     await createGame({
       players: ["clkl99dy20000uvxglbahswd7", "clknjfhsf0000uv3wzrlahf5x"],
-      increment: 10,
-      time: 60 * 30,
+      increment: 0,
+      time: 30,
     }),
   )
 

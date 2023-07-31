@@ -43,15 +43,7 @@ const ClaimTimeoutEvent: EventFile = {
 
     await redisClient.hset(`${gameId}:time`, requestedTo, 0)
 
-    MoveEvent.execute(
-      { socket, ws, user },
-      JSON.stringify({
-        gameId: rawGameId,
-        from: "efjoefjoefjo",
-        to: "efjoefjoefjoef",
-        promotion: "efjoefjoefjoefjo",
-      }),
-    )
+    
   },
 }
 
