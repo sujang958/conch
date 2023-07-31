@@ -45,13 +45,9 @@ const ClaimTimeoutEvent: EventFile = {
       turn: requestedTo,
     })
 
-    console.log("New Remaining Time", newRemainingTime)
-
     if (newRemainingTime > 0) return
 
     const fen = await redisClient.get(`${gameId}:fen`)
-
-    console.log(fen)
 
     if (fen == null)
       return socket.send(

@@ -185,7 +185,9 @@
 				: Math.round(remainingSeconds)
 		).padStart(2, "0")
 
-		return `${formattedMinutes}:${formattedSeconds}`
+		return `${formattedMinutes}:${
+			Number(formattedSeconds) < 10 ? `0${formattedSeconds}` : formattedSeconds
+		}`
 	}
 </script>
 
