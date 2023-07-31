@@ -79,3 +79,5 @@ export const eventRes = z.union([
 ])
 
 export type EventRes = z.infer<typeof eventRes>
+
+export type GameEndReason = Extract<EventRes, { type: "GAME_END" }>["reason"]

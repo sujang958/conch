@@ -1,11 +1,21 @@
 import { nanoid } from "nanoid"
 import { redisClient } from "./redis.js"
-import { Chess } from "chess.js"
+import { Chess, PieceSymbol } from "chess.js"
 import prisma from "../../prisma/prisma.js"
 import { getOrCreate } from "../utils/map.js"
 import { gameHouseholds } from "../ws/events/rooms.js"
-import { EventRes } from "../types/events.js"
+import { EventRes, GameEndReason } from "../types/events.js"
 import EloRank from "elo-rank"
+import { WebSocket } from "ws"
+
+export const getVictoryStatus = (
+  me: "white" | "black",
+  winner: "white" | "black" | "draw",
+) => {
+  if (winner == "draw") return "DRAW"
+  if (me == "black") return winner == "white" ? "LOST" : "WON"
+  else return winner == "white" ? "WON" : "LOST"
+}
 
 export const getNewElo = async ({
   whiteElo,
@@ -127,7 +137,7 @@ export const finishGame = async ({
   rawGameId: string
   players: Record<string, string>
   winner: "white" | "black" | "draw"
-  reason: Extract<EventRes, { type: "GAME_END" }>["reason"]
+  reason: GameEndReason
   newElo: Awaited<ReturnType<typeof getNewElo>>
 }) => {
   if (!newElo) return null
@@ -218,4 +228,106 @@ export const getNewTime = async ({
   const newRemainingTime = remainingTime - (now - lastMovedTime) + increment
 
   return newRemainingTime
+}
+
+export const sendGameEndEvent = async ({
+  rawGameId,
+  winner,
+  reason,
+  players,
+  households,
+}: {
+  rawGameId: string
+  winner: "white" | "black" | "draw"
+  reason: GameEndReason
+  players: Record<string, string>
+  households: { id: string | null; socket: WebSocket }[]
+}) => {
+  const newElo = await getNewElo({
+    whiteElo: Number(players.whiteElo),
+    blackElo: Number(players.blackElo),
+    winner,
+  })
+
+  if (!newElo) return
+
+  finishGame({ rawGameId, players, reason, winner, newElo })
+
+  const rawEventRes = {
+    type: "GAME_END",
+    newElo: {
+      white: {
+        now: newElo.white,
+        change: newElo.white - Number(players.whiteElo),
+      },
+      black: {
+        now: newElo.black,
+        change: newElo.black - Number(players.blackElo),
+      },
+    },
+    reason,
+    winnerId: players[winner],
+  } satisfies EventRes
+  const eventRes = JSON.stringify(rawEventRes)
+
+  households
+    .filter(({ id }) => players.white == id || players.black == id)
+    .forEach(({ id, socket }) =>
+      socket.send(
+        JSON.stringify({
+          ...rawEventRes,
+          you: getVictoryStatus(
+            id == players.black ? "black" : "white",
+            winner,
+          ),
+        } satisfies EventRes),
+      ),
+    )
+  households.forEach(({ socket }) => socket.send(eventRes))
+}
+
+export const isTimeoutVSInsufficientMaterial = async ({
+  chess,
+  timedOutColor,
+}: {
+  chess: Chess
+  timedOutColor: "white" | "black"
+}) => {
+  const opponentColor = timedOutColor == "white" ? "black" : "white"
+
+  const opponentPieces: { [key in PieceSymbol]: number } = {
+    b: 0,
+    p: 0,
+    n: 0,
+    r: 0,
+    q: 0,
+    k: 0,
+  }
+
+  chess.board().forEach((squares) => {
+    squares
+      .filter(
+        (
+          square,
+        ): square is Exclude<ReturnType<typeof chess.board>[0][0], null> =>
+          square !== null,
+      )
+      .filter(
+        (square) => square.color == (opponentColor == "white" ? "w" : "b"),
+      )
+      .forEach((square) => {
+        opponentPieces[square.type] += 1
+      })
+  })
+
+  if (
+    opponentPieces.r > 0 ||
+    opponentPieces.q > 0 ||
+    opponentPieces.b >= 2 ||
+    opponentPieces.n >= 2 ||
+    (opponentPieces.n >= 1 && opponentPieces.b >= 1) ||
+    opponentPieces.p > 0
+  )
+    return false
+  else return true
 }
