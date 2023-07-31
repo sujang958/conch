@@ -3,6 +3,7 @@ import mercurius, { IResolvers } from "mercurius"
 import mercuriusCodegen, { gql } from "mercurius-codegen"
 import prisma from "../../prisma/prisma.js"
 import { verify } from "../auth/jwt.js"
+import { parseCookie } from "../utils/cookie.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => {
   return {
@@ -81,7 +82,7 @@ const schema = gql`
 const resolvers: IResolvers = {
   Query: {
     async me(_, __, ctx) {
-      const token = ctx.req.headers.token
+      const token = parseCookie(ctx.req.headers.cookie ?? "").token
       if (!token) return null
 
       const user = await verify(token.toString())
@@ -102,7 +103,12 @@ const resolvers: IResolvers = {
     },
     async user(_, { id }) {
       return JSON.parse(
-        JSON.stringify(await prisma.user.findUnique({ where: { id } })),
+        JSON.stringify(
+          await prisma.user.findUnique({
+            where: { id },
+            include: { blackGames: true, whiteGames: true, wonGames: true },
+          }),
+        ),
       )
     },
   },
@@ -114,6 +120,7 @@ const setupGraphQL = (fastify: FastifyInstance) => {
     resolvers,
     context: buildContext,
     path: "/graphql",
+    graphiql: process.env.NODE_ENV === "development",
   })
 }
 

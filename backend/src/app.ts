@@ -1,12 +1,8 @@
 import Fastify from "fastify"
 import WebsocketPlugin from "@fastify/websocket"
-import { redisClient } from "./db/redis.js"
 import setupWebsocket from "./ws/index.js"
 import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
-import { sign } from "./auth/jwt.js"
-import prisma from "../prisma/prisma.js"
-import { Chess } from "chess.js"
 import { createGame } from "./db/games.js"
 
 config()

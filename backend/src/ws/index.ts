@@ -7,6 +7,7 @@ import { verify } from "../auth/jwt.js"
 import WebSocket from "ws"
 import fastifyWebsocket from "@fastify/websocket"
 import { individuals } from "./events/rooms.js"
+import { parseCookie } from "../utils/cookie.js"
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url))
 
@@ -41,16 +42,6 @@ await Promise.all([
   loadEvents("lobby", lobbyEvents),
   loadEvents("game", gameEvents),
 ])
-
-const parseCookie = (cookies: string) =>
-  Object.fromEntries(
-    cookies
-      .replace(/ /gi, "")
-      .split(";")
-      .map((cookie) =>
-        cookie.split("=").map((value) => decodeURIComponent(value.trim())),
-      ),
-  )
 
 const handleMessage = async ({
   message,
