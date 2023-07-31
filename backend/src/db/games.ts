@@ -196,3 +196,26 @@ export const playerInGameAction = async ({
     players,
   }
 }
+
+export const getNewTime = async ({
+  time,
+  turn,
+  now,
+}: {
+  time: Record<string, string>
+  turn: "white" | "black"
+  now: number
+}) => {
+  const lastMovedTime = Number(time.lastMovedTime)
+  const increment = Number(time.increment)
+
+  const remainingTimeStr = time[turn]
+  const remainingTime = Number(remainingTimeStr)
+
+  if (isNaN(remainingTime) || isNaN(lastMovedTime) || isNaN(increment))
+    return NaN
+
+  const newRemainingTime = remainingTime - (now - lastMovedTime) + increment
+
+  return newRemainingTime
+}

@@ -25,7 +25,7 @@ const DrawEvent: EventFile = {
       return socket.send(
         JSON.stringify({
           type: "ERROR",
-          message: "You're not players of the game",
+          message: "You're not the players of the game",
         } satisfies EventRes),
       )
 

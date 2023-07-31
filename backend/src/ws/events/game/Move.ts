@@ -6,7 +6,12 @@ import { broadcast } from "../../../utils/broadcast.js"
 import { z } from "zod"
 import { getOrCreate } from "../../../utils/map.js"
 import { gameHouseholds } from "../rooms.js"
-import { endReason, finishGame, getNewElo } from "../../../db/games.js"
+import {
+  endReason,
+  finishGame,
+  getNewElo,
+  getNewTime,
+} from "../../../db/games.js"
 import EloRank from "elo-rank"
 import prisma from "../../../../prisma/prisma.js"
 import { Square } from "chess.js"
@@ -66,16 +71,11 @@ const MoveEvent: EventFile = {
 
       if (players[turnFullname] !== user.id) return
 
-      const lastMovedTime = Number(time.lastMovedTime)
-      const increment = Number(time.increment)
-
-      const remainingTimeStr = time[turnFullname]
-      const remainingTime = Number(remainingTimeStr)
-
-      if (isNaN(remainingTime) || isNaN(lastMovedTime) || isNaN(increment))
-        return
-
-      const newRemainingTime = remainingTime - (now - lastMovedTime) + increment
+      const newRemainingTime = await getNewTime({
+        time,
+        now,
+        turn: turnFullname,
+      })
 
       if (newRemainingTime <= 0) {
         const opponentColor = turn == "w" ? "black" : "white"
