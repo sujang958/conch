@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import Board from "$lib/Board.svelte"
-	import { join } from "path"
 	import { onMount } from "svelte"
 	import toast from "svelte-french-toast"
 

@@ -1,10 +1,10 @@
-import Fastify, { FastifyRequest, FastifyReply, FastifyInstance } from "fastify"
+import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify"
 import mercurius, { IResolvers } from "mercurius"
-import mercuriusCodegen, { gql } from "mercurius-codegen"
 import prisma from "../../prisma/prisma.js"
 import { sign, verify } from "../auth/jwt.js"
 import { parseCookie } from "../utils/cookie.js"
-import { auth, getEmailByCode } from "../auth/oauth.js"
+import { getEmailByCode } from "../auth/oauth.js"
+import { schema } from "./schema.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => {
   return {
@@ -20,69 +20,12 @@ declare module "mercurius" {
     extends PromiseType<ReturnType<typeof buildContext>> {}
 }
 
-const schema = gql`
-  type User {
-    id: String!
-    name: String
-    picture: String!
-    bio: String!
-    elo: Int!
-    createdAt: String!
-    whiteGames: [GameWithoutPlayers]!
-    blackGames: [GameWithoutPlayers]!
-    wonGames: [GameWithoutPlayers]!
-  }
+const userAction = async (ctx: mercurius.MercuriusContext) => {
+  const cookie = parseCookie(ctx.req.headers.cookie)
+  if (!cookie.token) return null
 
-  type UserWithoutGames {
-    id: String!
-    name: String
-    picture: String!
-    bio: String!
-    elo: Int!
-    createdAt: String!
-  }
-
-  type Game {
-    id: String!
-    pgn: String!
-    reason: String!
-    time: Int!
-    increment: Int!
-    endedAt: Int!
-    createdAt: String!
-
-    white: UserWithoutGames!
-    black: UserWithoutGames!
-    whiteId: String!
-    blackId: String!
-
-    winner: UserWithoutGames
-    winnerId: String
-  }
-
-  type GameWithoutPlayers {
-    id: String!
-    pgn: String!
-    reason: String!
-    time: Int!
-    increment: Int!
-    endedAt: String!
-    createdAt: String!
-
-    whiteId: String!
-    blackId: String!
-    winnerId: String
-  }
-
-  type Query {
-    user(id: String!): User
-    me: User
-  }
-
-  type Mutation {
-    login(code: String): Boolean!
-  }
-`
+  return await verify(cookie.token)
+}
 
 const resolvers: IResolvers = {
   Query: {
@@ -139,6 +82,22 @@ const resolvers: IResolvers = {
       ctx.req.headers["set-cookie"] = [`token=${token}; HttpOnly`]
 
       return true
+    },
+    async changeBio(_, { bio }, ctx) {
+      const _user = await userAction(ctx)
+      if (!_user) return
+
+      const user = await prisma.user.update({
+        where: { id: _user.id },
+        data: { bio },
+        include: {
+          whiteGames: true,
+          blackGames: true,
+          wonGames: true,
+        },
+      })
+
+      return user
     },
   },
 }

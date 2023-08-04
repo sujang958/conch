@@ -13,9 +13,9 @@ datasource db {
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
-  name       String?
+  name       String   @unique @db.Char(50)
   picture    String   @default("https://popcat.click/twitter-card.jpg")
-  bio        String   @default("im a noob")
+  bio        String   @default("im a noob") @db.Char(200)
   elo        Int      @default(1200)
   createdAt  DateTime @default(now())
   whiteGames Game[]   @relation("white")
