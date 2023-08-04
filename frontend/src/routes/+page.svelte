@@ -1,39 +1,56 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import Board from "$lib/Board.svelte"
+	import { join } from "path"
 	import { onMount } from "svelte"
+	import toast from "svelte-french-toast"
+
+	let ws: WebSocket
 
 	onMount(() => {
-		const ws = new WebSocket("ws://localhost:3000/ws/lobby") // TODO: change to env
+		ws = new WebSocket("ws://localhost:3000/ws/lobby") // TODO: change to env
 
 		ws.addEventListener("message", ({ data }) => {
 			const event = JSON.parse(data)
 
 			console.log(event)
-
-			switch (event.type) {
-				default:
-					break
-			}
-			switch (event.type) {
-				case "JOIN_GAME":
-					goto(`/live/${event.gameId}`)
-					break
-
-				default:
-					break
-			}
 		})
 
-		ws.addEventListener("open", () => {
+		ws.addEventListener("open", () => {})
+	})
+
+	let time = 60 * 2
+	let increment = 1
+
+	const joinQueue = ({ time, increment }: { time: number; increment: number }) =>
+		new Promise((resolve, reject) => {
 			ws.send(
 				`JOIN_GAME ${JSON.stringify({
-					time: 60 * 1,
-					increment: 0
+					time,
+					increment
 				})}`
 			)
+
+			ws.addEventListener(
+				"message",
+				({ data }) => {
+					const event = JSON.parse(data)
+
+					switch (event.type) {
+						case "JOIN_GAME":
+							resolve("")
+							goto(`/live/${event.gameId}`)
+							break
+						case "ERROR":
+							reject(event.message)
+							break
+						default:
+							break
+					}
+				},
+				{ once: true }
+			)
 		})
-	})
 </script>
 
 <div
@@ -47,6 +64,13 @@
 				>2 | 1</button
 			>
 			<button
+				on:click={() => {
+					toast.promise(joinQueue({ time, increment }), {
+						error: (reason) => reason,
+						success: "Game Found",
+						loading: "Looking for Opponent"
+					})
+				}}
 				class="rounded-xl bg-neutral-200 text-neutral-800 text-center font-semibold py-2.5 text-2xl"
 				>PLAY</button
 			>

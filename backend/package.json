@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@fastify/websocket": "^8.2.0",
+    "@octokit/auth-oauth-app": "^7.0.0",
     "@prisma/client": "^5.0.0",
     "chess.js": "^1.0.0-beta.4",
     "dotenv": "^16.0.3",
@@ -30,6 +31,7 @@
     "mercurius": "^13.1.0",
     "mercurius-codegen": "^5.0.3",
     "nanoid": "^4.0.2",
+    "vegot": "^1.0.7",
     "zod": "^3.21.4"
   }
 }

@@ -2,8 +2,9 @@ import Fastify, { FastifyRequest, FastifyReply, FastifyInstance } from "fastify"
 import mercurius, { IResolvers } from "mercurius"
 import mercuriusCodegen, { gql } from "mercurius-codegen"
 import prisma from "../../prisma/prisma.js"
-import { verify } from "../auth/jwt.js"
+import { sign, verify } from "../auth/jwt.js"
 import { parseCookie } from "../utils/cookie.js"
+import { auth, getEmailByCode } from "../auth/oauth.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => {
   return {
@@ -77,6 +78,10 @@ const schema = gql`
     user(id: String!): User
     me: User
   }
+
+  type Mutation {
+    login(code: String): Boolean!
+  }
 `
 
 const resolvers: IResolvers = {
@@ -110,6 +115,30 @@ const resolvers: IResolvers = {
           }),
         ),
       )
+    },
+  },
+  Mutation: {
+    async login(_, { code }, ctx) {
+      if (!code) return
+      const email = await getEmailByCode(code)
+
+      if (!email) return false
+
+      const user = await prisma.user.upsert({
+        where: {
+          email,
+        },
+        update: {},
+        create: {
+          email,
+        },
+      })
+
+      const token = await sign({ id: user.id })
+
+      ctx.req.headers["set-cookie"] = [`token=${token}; HttpOnly`]
+
+      return true
     },
   },
 }
