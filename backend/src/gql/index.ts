@@ -20,11 +20,23 @@ declare module "mercurius" {
     extends PromiseType<ReturnType<typeof buildContext>> {}
 }
 
-const userAction = async (ctx: mercurius.MercuriusContext) => {
-  const cookie = parseCookie(ctx.req.headers.cookie)
-  if (!cookie.token) return null
+// const userAction = async (ctx: mercurius.MercuriusContext) => {
+//   const cookie = parseCookie(ctx.req.headers.cookie)
+//   if (!cookie.token) return null
 
-  return await verify(cookie.token)
+//   return await verify(cookie.token)
+// }
+
+const userAction = (callback: (user: { id: string }, arg: any) => any) => {
+  return async (_: any, arg: any, ctx: mercurius.MercuriusContext) => {
+    const cookie = parseCookie(ctx.req.headers.cookie)
+    if (!cookie.token) return null
+
+    const user = await verify(cookie.token)
+    if (!user) return null
+
+    return await callback(user, arg)
+  }
 }
 
 const resolvers: IResolvers = {
@@ -83,22 +95,23 @@ const resolvers: IResolvers = {
 
       return true
     },
-    async changeBio(_, { bio }, ctx) {
-      const _user = await userAction(ctx)
-      if (!_user) return
-
-      const user = await prisma.user.update({
-        where: { id: _user.id },
-        data: { bio },
+    changeBio: userAction(async (user, { bio }) => {
+      const updatedUser = await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          bio,
+        },
         include: {
-          whiteGames: true,
           blackGames: true,
+          whiteGames: true,
           wonGames: true,
         },
       })
 
-      return user
-    },
+      return updatedUser
+    }),
   },
 }
 
