@@ -5,6 +5,7 @@
 	import { toReversed } from "./utils"
 
 	export let onMove: ((move: Move) => any) | null = null
+	export let afterMove: (...args: any[]) => any = () => {}
 	export let game: Chess = new Chess()
 	export let board = game.board()
 	export let history: string[] = []
@@ -141,6 +142,7 @@
 		} finally {
 			history = [...game.history()]
 			move.promotion = undefined
+			afterMove()
 		}
 	}
 
@@ -214,6 +216,7 @@
 	</div>
 	{#each colorFor == "white" ? board : toReversed(board) as row, i}
 		{#each colorFor == "white" ? row : toReversed(row) as item, j}
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<div
 				id={`${String.fromCharCode(colorFor == "white" ? j + 65 : 72 - j).toLowerCase()}${
 					colorFor == "white" ? 8 - i : i + 1
@@ -237,6 +240,7 @@
 				}}
 			>
 				{#if item}
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<img
 						src={`/pieces/${item.color}_${item.type}.svg`}
 						alt={item.type}

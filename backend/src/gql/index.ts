@@ -6,12 +6,10 @@ import { parseCookie } from "../utils/cookie.js"
 import { getEmailByCode } from "../auth/oauth.js"
 import { schema } from "./schema.js"
 
-const buildContext = async (req: FastifyRequest, reply: FastifyReply) => {
-  return {
-    req,
-    reply,
-  }
-}
+const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
+  req,
+  reply,
+})
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T
 
@@ -19,13 +17,6 @@ declare module "mercurius" {
   interface MercuriusContext
     extends PromiseType<ReturnType<typeof buildContext>> {}
 }
-
-// const userAction = async (ctx: mercurius.MercuriusContext) => {
-//   const cookie = parseCookie(ctx.req.headers.cookie)
-//   if (!cookie.token) return null
-
-//   return await verify(cookie.token)
-// }
 
 const userAction = (callback: (user: { id: string }, arg: any) => any) => {
   return async (_: any, arg: any, ctx: mercurius.MercuriusContext) => {
@@ -73,10 +64,9 @@ const resolvers: IResolvers = {
     },
   },
   Mutation: {
-    async login(_, { code }, ctx) {
+    async login(_, { code, name }, ctx) {
       if (!code) return
       const email = await getEmailByCode(code)
-
       if (!email) return false
 
       const user = await prisma.user.upsert({
@@ -86,6 +76,7 @@ const resolvers: IResolvers = {
         update: {},
         create: {
           email,
+          name,
         },
       })
 

@@ -192,7 +192,7 @@
 </script>
 
 {#if gameEnded && newElo}
-	<div class="grid place-items-center fixed top-0 bottom-0 right-0 left-0 h-screen z-50">
+	<div class="grid place-items-center fixed inset-0 h-screen z-50">
 		<div class="rounded-lg bg-neutral-50 py-5 px-6 flex flex-col items-center">
 			<p class="text-3xl font-bold">{won != null ? (won ? "Won" : "Lost") : "Draw"}</p>
 			<p class="text-base">by {endReason ?? "unknown issues"}</p>

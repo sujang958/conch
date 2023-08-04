@@ -11,7 +11,7 @@ export const auth = createOAuthAppAuth({
   clientSecret: process.env.GH_SECRET,
 })
 
-export const getEmailByCode = async (code: string) => {
+export const getEmailByCode = async (code: string): Promise<string | null> => {
   const authentication = await auth({
     type: "oauth-user",
     code,
@@ -28,5 +28,9 @@ export const getEmailByCode = async (code: string) => {
   if (!Array.isArray(data)) return null
   if (data.length < 1) return null
 
-  return data[0].email
+  const email = data[0].email
+
+  if (typeof email !== "string") return null
+
+  return email
 }
