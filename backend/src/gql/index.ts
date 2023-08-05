@@ -5,6 +5,7 @@ import { sign, verify } from "../auth/jwt.js"
 import { parseCookie } from "../utils/cookie.js"
 import { getEmailByCode } from "../auth/oauth.js"
 import { schema } from "./schema.js"
+import { nanoid } from "nanoid"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
   req,
@@ -64,7 +65,7 @@ const resolvers: IResolvers = {
     },
   },
   Mutation: {
-    async login(_, { code, name }, ctx) {
+    async login(_, { code }, ctx) {
       if (!code) return
       const email = await getEmailByCode(code)
       if (!email) return false
@@ -76,7 +77,7 @@ const resolvers: IResolvers = {
         update: {},
         create: {
           email,
-          name,
+          name: nanoid(),
         },
       })
 

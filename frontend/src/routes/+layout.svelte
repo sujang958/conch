@@ -1,17 +1,9 @@
 <script>
 	import "./app.css"
 	import { Toaster } from "svelte-french-toast"
-	import { GraphQLClient, gql, request } from "graphql-request"
+	import { gql } from "graphql-request"
 	import { user } from "$lib/stores/user"
-
-	// TODO: use env var
-	const graphQLClient = new GraphQLClient("http://localhost:3000/graphql", {
-		method: `GET`,
-		jsonSerializer: {
-			parse: JSON.parse,
-			stringify: JSON.stringify
-		}
-	})
+	import { graphQLClient } from "$lib/utils/graphql"
 
 	const userQuery = gql`
 		{

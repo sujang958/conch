@@ -1,18 +1,45 @@
 <script lang="ts">
+	import { auth, githubProvider, googleProvider } from "$lib/auth/firebase"
+	import { graphQLClient } from "$lib/utils/graphql"
+	import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+	import { gql } from "graphql-request"
+	import toast from "svelte-french-toast"
+
+	const loginMutation = gql`
+		mutation Login($idToken: String!) {
+			login(idToken: $idToken)
+		}
+	`
+
+	const login = async (method: "GOOGLE" | "GITHUB") => {
+		const provider = method == "GOOGLE" ? googleProvider : githubProvider
+		const AuthProvider = method == "GOOGLE" ? GoogleAuthProvider : GithubAuthProvider
+		const result = await signInWithPopup(auth, provider)
+		const credential = AuthProvider.credentialFromResult(result)
+
+		if (!credential?.idToken) throw new Error("Cannot get your token")
+
+		const data = await graphQLClient.request(loginMutation, {
+			idToken: credential.idToken,
+		})
+	}
 </script>
 
 <section class="w-full h-screen flex flex-row items-stretch">
 	<section class="flex-1 bg-white">
 		<img src="/images/bg.jpg" alt="Magnus meme" class="object-contain w-full h-full" />
 	</section>
-	<section class="flex-1 grid place-items-center place-content-center">
+	<section class="flex-1 grid place-items-center">
 		<div class="w-72 flex flex-col items-center justify-center gap-y-8">
 			<section class="w-full text-center">
 				<p class="text-2xl font-semibold">Login to Conch</p>
-				<p class="text-sm text-neutral-400 mt-2.5">I was too lazy to create a login with email lol</p>
+				<p class="text-sm text-neutral-400 mt-2.5">
+					I was too lazy to create a login with email lol
+				</p>
 			</section>
-			<div class="border-t border-neutral-800 -mt-2 pt-4 w-full flex flex-col gap-y-4">
+			<div class="border-t border-neutral-800 -mt-2 pt-6 w-full flex flex-col gap-y-4">
 				<button
+					on:click={login.bind(null, "GOOGLE")}
 					type="button"
 					class="bg-white border border-neutral-900 text-black rounded-lg w-full py-2 font-semibold text-sm flex flex-row items-center justify-center gap-x-2"
 				>
@@ -47,6 +74,7 @@
 				>
 				<button
 					type="button"
+					on:click={login.bind(null, "GITHUB")}
 					class="bg-neutral-900 text-white rounded-lg w-full py-2 font-semibold text-sm flex flex-row items-center justify-center gap-x-2"
 					><svg
 						xmlns="http://www.w3.org/2000/svg"
