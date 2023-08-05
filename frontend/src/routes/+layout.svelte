@@ -65,9 +65,16 @@
 		}
 	`
 
-	graphQLClient.request(userQuery).then((data) => {
-		$user = data.me
-	})
+	graphQLClient
+		.request(userQuery)
+		.then((data) => {
+			$user = data.me
+		})
+		.catch((err) => {
+			console.log(err)
+
+			$user = null
+		})
 </script>
 
 <slot />
