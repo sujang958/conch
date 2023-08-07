@@ -1,11 +1,7 @@
 import { EventFile, EventRes } from "../../../types/events.js"
-import { verify } from "../../../auth/jwt.js"
 import { redisClient } from "../../../db/redis.js"
 import { z } from "zod"
 import prisma from "../../../../prisma/prisma.js"
-import { nanoid } from "nanoid"
-import { Chess } from "chess.js"
-import { broadcast } from "../../../utils/broadcast.js"
 import { individuals } from "../rooms.js"
 import { createGame } from "../../../db/games.js"
 
@@ -15,7 +11,7 @@ const joinGameParam = z.object({
 })
 
 const INT4_MAX = 2_147_483_647
-const ELO_DEVIATION = 250
+const ELO_DEVIATION = 300
 
 const JoinGameEvent: EventFile = {
   name: "JOIN_GAME",
@@ -29,21 +25,21 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Invalid time settings",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
     if (parsedArg.data.time <= 0 || parsedArg.data.increment < 0)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: "Time and increment can't be negative",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
     if (parsedArg.data.time > INT4_MAX || parsedArg.data.increment > INT4_MAX)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: `Time and increment can't be greater than ${INT4_MAX}`,
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const allQueues = await redisClient.keys("queue:*")
@@ -55,7 +51,7 @@ const JoinGameEvent: EventFile = {
             .map((user) => user.trim().split(":"))
             .findIndex(([userId, _]) => userId == user.id) < 0
         )
-      }),
+      })
     )
 
     if (searched.includes(false))
@@ -63,7 +59,7 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "You're already in a queue",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
@@ -78,7 +74,7 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "You can't be found in the database",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const users = queue
@@ -90,7 +86,7 @@ const JoinGameEvent: EventFile = {
       .findIndex(
         ([_, elo]) =>
           userInfo.elo - ELO_DEVIATION <= Number(elo) &&
-          Number(elo) <= userInfo.elo + ELO_DEVIATION,
+          Number(elo) <= userInfo.elo + ELO_DEVIATION
       )
 
     if (availableUserIndex < 0) {
@@ -115,7 +111,7 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Players can't be found",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const user1 = individuals.get(user.id)
@@ -126,14 +122,14 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Players can't be found",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
     if (!user1.OPEN || !user2.OPEN)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: "One of the two players disconnected",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const res = JSON.stringify({

@@ -1,16 +1,13 @@
 import { z } from "zod"
-import { EventFile, EventRes } from "../../../types/events.js"
+import { EventFile, EventRes, GameEndReason } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
-import { gameHouseholds } from "../rooms.js"
-import { getOrCreate } from "../../../utils/map.js"
 import {
   getNewTime,
   isTimeoutVSInsufficientMaterial,
   playerInGameAction,
   sendGameEndEvent,
 } from "../../../db/games.js"
-import MoveEvent from "./Move.js"
-import { Chess, DEFAULT_POSITION } from "chess.js"
+import { Chess } from "chess.js"
 
 const claimTimeoutEventParam = z.object({
   gameId: z.string(),
@@ -33,7 +30,7 @@ const ClaimTimeoutEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "You're not the players of the game",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     const { gameId, color, players } = action
@@ -54,7 +51,7 @@ const ClaimTimeoutEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Can't find the board",
-        } satisfies EventRes),
+        } satisfies EventRes)
       )
 
     await redisClient.hset(`${gameId}:time`, requestedTo, 0)
@@ -71,7 +68,7 @@ const ClaimTimeoutEvent: EventFile = {
       winner = color
     else winner = "draw"
 
-    const reason =
+    const reason: GameEndReason =
       winner == "draw" ? "TIMEOUT VS INSUFFICIENT_MATERIAL" : "TIMEOUT"
 
     sendGameEndEvent({
