@@ -2,10 +2,12 @@ import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify"
 import mercurius, { IResolvers } from "mercurius"
 import prisma from "../../prisma/prisma.js"
 import { sign, verify } from "../auth/jwt.js"
-import { parseCookie } from "../utils/cookie.js"
 import { schema } from "./schema.js"
 import { nanoid } from "nanoid"
 import { verifyIdToken } from "../auth/firebase.js"
+import { me } from "./queries/me.js"
+import { changeBio } from "./mutations/changeBio.js"
+import { changeName } from "./mutations/changeName.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
   req,
@@ -19,40 +21,11 @@ declare module "mercurius" {
     extends PromiseType<ReturnType<typeof buildContext>> {}
 }
 
-const userAction = (callback: (user: { id: string }, arg: any) => any) => {
-  return async (_: any, arg: any, ctx: mercurius.MercuriusContext) => {
-    const cookie = parseCookie(ctx.req.headers.cookie)
-    if (!cookie.token) return null
-
-    const user = await verify(cookie.token)
-    if (!user) return null
-
-    return await callback(user, arg)
-  }
-}
+// TODO: change this to auto-importing
 
 const resolvers: IResolvers = {
   Query: {
-    async me(_, __, ctx) {
-      const token = parseCookie(ctx.req.headers.cookie ?? "").token
-      if (!token) return null
-
-      const user = await verify(token.toString())
-      if (!user) return null
-
-      const fetchedUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: {
-          blackGames: true,
-          whiteGames: true,
-          wonGames: true,
-        },
-      })
-
-      if (!fetchedUser) return
-
-      return JSON.parse(JSON.stringify(fetchedUser))
-    },
+    me,
     async user(_, { id }) {
       return JSON.parse(
         JSON.stringify(
@@ -87,23 +60,8 @@ const resolvers: IResolvers = {
 
       return true
     },
-    changeBio: userAction(async (user, { bio }) => {
-      const updatedUser = await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          bio,
-        },
-        include: {
-          blackGames: true,
-          whiteGames: true,
-          wonGames: true,
-        },
-      })
-
-      return updatedUser
-    }),
+    changeBio,
+    changeName,
   },
 }
 
