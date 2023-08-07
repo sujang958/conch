@@ -3,9 +3,9 @@ import mercurius, { IResolvers } from "mercurius"
 import prisma from "../../prisma/prisma.js"
 import { sign, verify } from "../auth/jwt.js"
 import { parseCookie } from "../utils/cookie.js"
-import { getEmailByCode } from "../auth/oauth.js"
 import { schema } from "./schema.js"
 import { nanoid } from "nanoid"
+import { verifyIdToken } from "../auth/firebase.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
   req,
@@ -59,15 +59,15 @@ const resolvers: IResolvers = {
           await prisma.user.findUnique({
             where: { id },
             include: { blackGames: true, whiteGames: true, wonGames: true },
-          }),
-        ),
+          })
+        )
       )
     },
   },
   Mutation: {
-    async login(_, { code }, ctx) {
-      if (!code) return
-      const email = await getEmailByCode(code)
+    async login(_, { idToken }, ctx) {
+      if (!idToken) return
+      const email = await verifyIdToken(idToken)
       if (!email) return false
 
       const user = await prisma.user.upsert({

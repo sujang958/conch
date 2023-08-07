@@ -1,42 +1,38 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "cockroachdb"
+  provider = "postgresql"
   url      = env("DB_URL")
 }
 
 model User {
   id         String   @id @default(cuid())
-  email      String   @unique
-  name       String   @unique @db.Char(50)
   picture    String   @default("https://popcat.click/twitter-card.jpg")
-  bio        String   @default("im a noob") @db.Char(200)
+  bio        String   @default("im a noob")
   elo        Int      @default(1200)
   createdAt  DateTime @default(now())
-  whiteGames Game[]   @relation("white")
+  updatedAt DateTime  @updatedAt
+  name       String   @default("unnamed")
+  email      String   @unique
   blackGames Game[]   @relation("black")
+  whiteGames Game[]   @relation("white")
   wonGames   Game[]   @relation("won")
 }
 
 model Game {
   id        String   @id @default(uuid())
-  pgn       String
-  reason    String
-  time      Int
+  whiteId   String
+  blackId   String
+  winnerId  String?
   increment Int
+  pgn       String
+  time      Int
   endedAt   DateTime @default(now())
   createdAt DateTime
-
-  white   User   @relation("white", fields: [whiteId], references: [id])
-  black   User   @relation("black", fields: [blackId], references: [id])
-  whiteId String
-  blackId String
-
-  winner   User?   @relation("won", fields: [winnerId], references: [id])
-  winnerId String?
+  reason    String
+  black     User     @relation("black", fields: [blackId], references: [id])
+  white     User     @relation("white", fields: [whiteId], references: [id])
+  winner    User?    @relation("won", fields: [winnerId], references: [id])
 }

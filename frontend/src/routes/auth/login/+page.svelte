@@ -22,6 +22,8 @@
 		const data = await graphQLClient.request(loginMutation, {
 			idToken: credential.idToken,
 		})
+
+		console.log(data)
 	}
 </script>
 
