@@ -8,6 +8,7 @@ import { verifyIdToken } from "../auth/firebase.js"
 import { me } from "./queries/me.js"
 import { changeBio } from "./mutations/changeBio.js"
 import { changeName } from "./mutations/changeName.js"
+import { login } from "./mutations/login.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
   req,
@@ -38,28 +39,7 @@ const resolvers: IResolvers = {
     },
   },
   Mutation: {
-    async login(_, { idToken }, ctx) {
-      if (!idToken) return
-      const email = await verifyIdToken(idToken)
-      if (!email) return false
-
-      const user = await prisma.user.upsert({
-        where: {
-          email,
-        },
-        update: {},
-        create: {
-          email,
-          name: nanoid(),
-        },
-      })
-
-      const token = await sign({ id: user.id })
-
-      ctx.req.headers["set-cookie"] = [`token=${token}; HttpOnly`]
-
-      return true
-    },
+    login,
     changeBio,
     changeName,
   },

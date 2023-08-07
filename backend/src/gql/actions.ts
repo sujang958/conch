@@ -15,3 +15,9 @@ export const userAction = (
     return await callback(user, arg)
   }
 }
+
+export const publicAction =
+  (callback: (arg: any, ctx: mercurius.MercuriusContext) => any) =>
+  async (_: any, arg: any, ctx: mercurius.MercuriusContext) =>
+    await callback(arg, ctx)
+  
