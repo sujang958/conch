@@ -73,11 +73,9 @@ const ClaimTimeoutEvent: EventFile = {
 
     const reason =
       winner == "draw" ? "TIMEOUT VS INSUFFICIENT_MATERIAL" : "TIMEOUT"
-    const households = getOrCreate(gameHouseholds, rawGameId, [])
 
     sendGameEndEvent({
       rawGameId,
-      households,
       players,
       reason,
       winner,

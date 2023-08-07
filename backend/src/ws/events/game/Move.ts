@@ -1,23 +1,15 @@
 import { Chess } from "chess.js"
 import { EventFile, EventRes } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
-import { verify } from "../../../auth/jwt.js"
-import { broadcast } from "../../../utils/broadcast.js"
 import { z } from "zod"
 import { getOrCreate } from "../../../utils/map.js"
 import { gameHouseholds } from "../rooms.js"
 import {
-  endReason,
-  finishGame,
-  getNewElo,
+  getEndReason,
   getNewTime,
   isTimeoutVSInsufficientMaterial,
   sendGameEndEvent,
 } from "../../../db/games.js"
-import EloRank from "elo-rank"
-import prisma from "../../../../prisma/prisma.js"
-import { Square } from "chess.js"
-import { PieceSymbol } from "chess.js"
 
 const moveEventParam = z.object({
   gameId: z.string(),
@@ -50,10 +42,6 @@ const MoveEvent: EventFile = {
 
       if (pgn === null || !user || !players || !time) return
 
-      const households = getOrCreate(gameHouseholds, rawGameId, [])
-
-      if (households.length < 1) return
-
       const chess = new Chess()
 
       chess.loadPgn(pgn)
@@ -85,7 +73,7 @@ const MoveEvent: EventFile = {
         const reason =
           winner == "draw" ? "TIMEOUT VS INSUFFICIENT_MATERIAL" : "TIMEOUT"
 
-        sendGameEndEvent({ rawGameId, households, players, reason, winner })
+        sendGameEndEvent({ rawGameId, players, reason, winner })
 
         return
       }
@@ -104,13 +92,17 @@ const MoveEvent: EventFile = {
         redisClient.hset(`${gameId}:time`, turnFullname, newRemainingTime),
       ])
 
+      const households = getOrCreate(gameHouseholds, rawGameId, [])
+
+      if (households.length < 1) return
+
       const res = JSON.stringify({
         type: "BOARD",
         gameId: gameId,
         time: Object.fromEntries(
           Object.entries(await redisClient.hgetall(`${gameId}:time`)).map(
-            ([name, value]) => [name, Number(value)],
-          ),
+            ([name, value]) => [name, Number(value)]
+          )
         ),
         pgn: newPgn,
         fen: newFen,
@@ -120,7 +112,7 @@ const MoveEvent: EventFile = {
         .filter(
           ({ socket }) =>
             socket.readyState !== socket.CLOSED &&
-            socket.readyState !== socket.CLOSING,
+            socket.readyState !== socket.CLOSING
         )
         .forEach(async ({ socket }) => {
           socket.send(res)
@@ -128,9 +120,9 @@ const MoveEvent: EventFile = {
 
       if (chess.isGameOver()) {
         const winner = chess.isDraw() ? "draw" : turnFullname
-        const reason = endReason(chess) ?? "DRAW"
+        const reason = getEndReason(chess) ?? "DRAW"
 
-        sendGameEndEvent({ rawGameId, households, players, reason, winner })
+        sendGameEndEvent({ rawGameId, players, reason, winner })
 
         return
       }
@@ -147,7 +139,7 @@ const MoveEvent: EventFile = {
 
       gameHouseholds.set(
         rawGameId,
-        households.filter((v) => v),
+        households.filter((v) => v)
       )
     } catch (e) {
       console.log(e)

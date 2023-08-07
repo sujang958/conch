@@ -116,7 +116,7 @@ export const createGame = async ({
   return id
 }
 
-export const endReason = (chess: Chess) => {
+export const getEndReason = (chess: Chess) => {
   if (!chess.isGameOver()) return null
 
   if (chess.isInsufficientMaterial()) return "INSUFFICIENT_MATERIAL"
@@ -127,7 +127,7 @@ export const endReason = (chess: Chess) => {
   return null
 }
 
-export const finishGame = async ({
+export const deleteFromRedisMoveToPostgres = async ({
   rawGameId,
   players,
   winner,
@@ -235,14 +235,14 @@ export const sendGameEndEvent = async ({
   winner,
   reason,
   players,
-  households,
 }: {
   rawGameId: string
   winner: "white" | "black" | "draw"
   reason: GameEndReason
   players: Record<string, string>
-  households: { id: string | null; socket: WebSocket }[]
 }) => {
+  const households = getOrCreate(gameHouseholds, rawGameId, [])
+
   const newElo = await getNewElo({
     whiteElo: Number(players.whiteElo),
     blackElo: Number(players.blackElo),
@@ -251,7 +251,13 @@ export const sendGameEndEvent = async ({
 
   if (!newElo) return
 
-  finishGame({ rawGameId, players, reason, winner, newElo })
+  deleteFromRedisMoveToPostgres({
+    rawGameId,
+    players,
+    reason,
+    winner,
+    newElo,
+  })
 
   const rawEventRes = {
     type: "GAME_END",
@@ -278,10 +284,10 @@ export const sendGameEndEvent = async ({
           ...rawEventRes,
           you: getVictoryStatus(
             id == players.black ? "black" : "white",
-            winner,
+            winner
           ),
-        } satisfies EventRes),
-      ),
+        } satisfies EventRes)
+      )
     )
   households.forEach(({ socket }) => socket.send(eventRes))
 }
@@ -321,12 +327,12 @@ export const isTimeoutVSInsufficientMaterial = async ({
   })
 
   if (
-    opponentPieces.r > 0 ||
-    opponentPieces.q > 0 ||
+    opponentPieces.r >= 1 ||
+    opponentPieces.q >= 1 ||
     opponentPieces.b >= 2 ||
-    opponentPieces.n >= 2 ||
+    opponentPieces.n >= 2 || // knights can't FORCE checkmates, but can checkmate.
     (opponentPieces.n >= 1 && opponentPieces.b >= 1) ||
-    opponentPieces.p > 0
+    opponentPieces.p >= 1
   )
     return false
   else return true

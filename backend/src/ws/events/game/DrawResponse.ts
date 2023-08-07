@@ -3,7 +3,7 @@ import { EventFile, EventRes } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
 import { gameHouseholds } from "../rooms.js"
 import { getOrCreate } from "../../../utils/map.js"
-import { finishGame, getNewElo } from "../../../db/games.js"
+import { deleteFromRedisMoveToPostgres, getNewElo } from "../../../db/games.js"
 
 const drawEventParam = z.object({
   gameId: z.string(),
@@ -44,7 +44,7 @@ const DrawEvent: EventFile = {
         winner: "draw",
       })
 
-      finishGame({
+      deleteFromRedisMoveToPostgres({
         rawGameId,
         newElo,
         players,
