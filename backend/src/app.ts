@@ -5,6 +5,14 @@ import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
 import cors from "@fastify/cors"
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      NODE_ENV: "development" | "production"
+    }
+  }
+}
+
 config()
 
 const PORT = Number(process.env.PORT)
@@ -13,9 +21,16 @@ const fastify = Fastify({
   logger: true,
 })
 
+if (!process.env.COOKIE_SECRET) process.exit(404)
+
 fastify.register(WebsocketPlugin)
 fastify.register(setupWebsocket)
-fastify.register(cors, { origin: "*" })
+fastify.register(cors, {
+  origin:
+    process.env.NODE_ENV === "production" ? "conch.vercel.app" : "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+})
 
 setupGraphQL(fastify)
 

@@ -20,7 +20,7 @@ export const login = publicAction(async ({ idToken }, ctx) => {
 
   const token = await sign({ id: user.id })
 
-  ctx.req.headers["set-cookie"] = [`token=${token}; HttpOnly`]
+  ctx.reply.header("Set-Cookie", `token=${encodeURIComponent(token)}; HttpOnly`)
 
   return true
 })

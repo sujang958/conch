@@ -13,16 +13,16 @@
 
 	const login = async (method: "GOOGLE" | "GITHUB") => {
 		const provider = method == "GOOGLE" ? googleProvider : githubProvider
-		const AuthProvider = method == "GOOGLE" ? GoogleAuthProvider : GithubAuthProvider
-		const result = await signInWithPopup(auth, provider)
-		const credential = AuthProvider.credentialFromResult(result)
+		
+		await signInWithPopup(auth, provider)
 
-		if (!credential?.idToken) throw new Error("Cannot get your token")
+		const idToken = await auth.currentUser?.getIdToken()
+		if (!idToken) throw new Error("Cannot get your token")
 
 		const data = await graphQLClient.request(loginMutation, {
-			idToken: credential.idToken,
+			idToken,
 		})
-
+		
 		console.log(data)
 	}
 </script>
