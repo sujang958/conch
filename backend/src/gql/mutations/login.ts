@@ -4,9 +4,9 @@ import { sign } from "../../auth/jwt.js"
 import { publicAction } from "../actions.js"
 
 export const login = publicAction(async ({ idToken }, ctx) => {
-  if (!idToken) return
+  if (!idToken) return null
   const email = await verifyIdToken(idToken)
-  if (!email) return false
+  if (!email) return null
 
   const user = await prisma.user.upsert({
     where: {
@@ -16,11 +16,16 @@ export const login = publicAction(async ({ idToken }, ctx) => {
     create: {
       email,
     },
+    include: {
+      blackGames: true,
+      whiteGames: true,
+      wonGames: true,
+    },
   })
 
   const token = await sign({ id: user.id })
 
   ctx.reply.header("Set-Cookie", `token=${encodeURIComponent(token)}; HttpOnly`)
 
-  return true
+  return user
 })

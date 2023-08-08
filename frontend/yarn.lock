@@ -2024,6 +2024,11 @@ util-deprecate@^1.0.2:
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==
 
+valibot@^0.11.1:
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/valibot/-/valibot-0.11.1.tgz#f4d301ddf791d87d51cdf31ec04408b5f12e6dc8"
+  integrity sha512-35v3J5FFHuxr/erQKASwy1VmbI9bc/GJzBd1QZWccXr3lh0xq6a/nzQfI49xBjJeHrAyFfbopr7ZT2TwkMFuPw==
+
 vite@^4.4.8:
   version "4.4.8"
   resolved "https://registry.yarnpkg.com/vite/-/vite-4.4.8.tgz#31e4a438f8748695c68bd57ffd262ba93540fdf7"

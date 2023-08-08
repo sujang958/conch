@@ -1,29 +1,15 @@
 <script lang="ts">
+	import { goto } from "$app/navigation"
 	import { auth, githubProvider, googleProvider } from "$lib/auth/firebase"
-	import { graphQLClient } from "$lib/utils/graphql"
-	import { GithubAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
-	import { gql } from "graphql-request"
+	import {  signInWithPopup } from "firebase/auth"
 	import toast from "svelte-french-toast"
-
-	const loginMutation = gql`
-		mutation Login($idToken: String!) {
-			login(idToken: $idToken)
-		}
-	`
 
 	const login = async (method: "GOOGLE" | "GITHUB") => {
 		const provider = method == "GOOGLE" ? googleProvider : githubProvider
 		
 		await signInWithPopup(auth, provider)
 
-		const idToken = await auth.currentUser?.getIdToken()
-		if (!idToken) throw new Error("Cannot get your token")
-
-		const data = await graphQLClient.request(loginMutation, {
-			idToken,
-		})
-		
-		console.log(data)
+		goto("/")
 	}
 </script>
 
@@ -41,7 +27,7 @@
 			</section>
 			<div class="border-t border-neutral-800 -mt-2 pt-6 w-full flex flex-col gap-y-4">
 				<button
-					on:click={login.bind(null, "GOOGLE")}
+					on:click={() => toast.promise(login("GOOGLE"), {error: (err) => err, loading: "Handling login", success: "Successfully logged in!"})}
 					type="button"
 					class="bg-white border border-neutral-900 text-black rounded-lg w-full py-2 font-semibold text-sm flex flex-row items-center justify-center gap-x-2"
 				>

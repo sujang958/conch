@@ -1,72 +1,23 @@
-<script>
+<script lang="ts">
 	import "./app.css"
 	import { Toaster } from "svelte-french-toast"
-	import { gql } from "graphql-request"
 	import { user } from "$lib/stores/user"
-	import { graphQLClient } from "$lib/utils/graphql"
+	import { loginWithIdToken } from "$lib/utils/graphql"
+	import { auth } from "$lib/auth/firebase"
 
-	const userQuery = gql`
-		{
-			me {
-				id
-				name
-				picture
-				bio
-				elo
-				createdAt
-				whiteGames {
-					id
-					pgn
-					reason
-					time
-					increment
-					endedAt
-					createdAt
+	auth.onIdTokenChanged(async (currentUser) => {
+		const idToken = await currentUser?.getIdToken()
 
-					whiteId
-					blackId
-					winnerId
-				}
-				blackGames {
-					id
-					pgn
-					reason
-					time
-					increment
-					endedAt
-					createdAt
+		if (!idToken) return ($user=null)
 
-					whiteId
-					blackId
-					winnerId
-				}
-				wonGames {
-					id
-					pgn
-					reason
-					time
-					increment
-					endedAt
-					createdAt
+		const fetchedUser = await loginWithIdToken(idToken)
+		$user = fetchedUser
+	})
 
-					whiteId
-					blackId
-					winnerId
-				}
-			}
-		}
-	`
-
-	graphQLClient
-		.request(userQuery)
-		.then((data) => {
-			$user = data.me
-		})
-		.catch((err) => {
-			console.log(err)
-
-			$user = null
-		})
+	auth.currentUser?.getIdToken().then(loginWithIdToken).then(fetchedUser => {
+		if (!fetchedUser) return
+		$user = fetchedUser
+	})
 </script>
 
 <slot />

@@ -27,7 +27,9 @@ fastify.register(WebsocketPlugin)
 fastify.register(setupWebsocket)
 fastify.register(cors, {
   origin:
-    process.env.NODE_ENV === "production" ? "conch.vercel.app" : "http://localhost:5173",
+    process.env.NODE_ENV === "production"
+      ? "https://conch.vercel.app"
+      : "http://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
 })
