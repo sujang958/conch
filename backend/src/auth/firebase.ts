@@ -1,9 +1,8 @@
-import admin from "firebase-admin"
+import admin, { ServiceAccount } from "firebase-admin"
+import account from "../../account.secret.json" assert { type: "json" }
 
 const app = admin.initializeApp({
-  credential: admin.credential.cert(
-    (await import("../../account.secret.json")).default as any
-  ),
+  credential: admin.credential.cert(account as ServiceAccount),
 })
 
 const auth = app.auth()
