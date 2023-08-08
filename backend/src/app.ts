@@ -3,9 +3,7 @@ import WebsocketPlugin from "@fastify/websocket"
 import setupWebsocket from "./ws/index.js"
 import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
-import { createGame } from "./db/games.js"
-import prisma from "../prisma/prisma.js"
-import { sign } from "./auth/jwt.js"
+import cors from "@fastify/cors"
 
 config()
 
@@ -17,6 +15,7 @@ const fastify = Fastify({
 
 fastify.register(WebsocketPlugin)
 fastify.register(setupWebsocket)
+fastify.register(cors, { origin: "*" })
 
 setupGraphQL(fastify)
 
