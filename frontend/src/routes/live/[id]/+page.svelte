@@ -8,6 +8,7 @@
 
 	let confirmWindowShown = false
 	let confirmMessage = "Are you sure?"
+	let confirmDescription = "U sure?"
 	let confirmFunction = () => {}
 	let notConfirmFunction = () => {}
 
@@ -71,7 +72,7 @@
 
 			switch (event.type) {
 				case "NOT_FOUND":
-					toast.error("Game not found", { position: "bottom-center", duration: 10_000 })
+					toast.error("Game not found", { duration: 10_000 })
 					break
 				case "BOARD":
 					game.load(event.fen)
@@ -82,8 +83,8 @@
 
 					console.log(time)
 
-					// const turnFullname = game.turn() == "w" ? "white" : "black"
-					// time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
+					const turnFullname = game.turn() == "w" ? "white" : "black"
+					time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
 
 					if (!boardInitialized) boardInitialized = true
 
@@ -103,7 +104,8 @@
 					gameEnded = true
 					break
 				case "DRAW_REQUESTED":
-					confirmMessage = "Opponent requested a draw, do you accept it?"
+					confirmMessage = "Your opponent requested a draw"
+					confirmDescription = "Do you accept it?"
 					confirmFunction = () => {
 						ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: true })}`)
 					}
@@ -266,39 +268,44 @@
 			</PlayerCard>
 		</section>
 
-		<section class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative">
+		<section
+			class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative p-2 gap-x-3"
+		>
 			<button
 				type="button"
-				class="font-medium rounded-l-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+				class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
 				on:click={() => {
 					confirmMessage = "Request a draw?"
+					confirmDescription = "You won't be able to redo this action"
 					confirmFunction = () => {
 						ws.send(`DRAW_REQUEST ${JSON.stringify({ gameId })}`)
 						toast.success("Requested a draw")
 					}
 					confirmWindowShown = true
-				}}>0.5-0.5</button
+				}}>Draw</button
 			>
 			<button
 				type="button"
-				class="font-medium rounded-r-lg flex-1 p-2 hover:bg-white/5 transition duration-200 font-intel-mono text-base"
+				class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
 				on:click={() => {
-					confirmMessage = "Are you sure?"
+					confirmMessage = "Are you surrendering?"
+					confirmDescription = "This action cannot be redone."
 					confirmFunction = () => {
 						ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
 					}
 					confirmWindowShown = true
-				}}>0-1</button
+				}}>Resign</button
 			>
 		</section>
 
 		<section
 			class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown
 				? 'opacity-100'
-				: 'opacity-0'} focus:opacity-100"
+				: 'opacity-0'} focus:opacity-100 text-center p-4 flex flex-col gap-y-4"
 		>
-			<p class="text-base font-medium text-center p-3">{confirmMessage}</p>
-			<div class="flex flex-row items-center justify-evenly">
+			<p class="font-semibold text-2xl">{confirmMessage}</p>
+			<p class="text-base text-neutral-400">{confirmDescription}</p>
+			<div class="flex flex-row items-center justify-evenly mt-3 gap-x-2">
 				<button
 					type="button"
 					on:click={() => {
@@ -307,8 +314,7 @@
 						confirmFunction = () => {}
 						notConfirmFunction = () => {}
 					}}
-					class="font-intel-mono rounded-bl-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
-					>Yes</button
+					class="rounded-lg flex-1 p-1.5 text-base text-white bg-red-500 font-medium">Yes</button
 				>
 				<button
 					type="button"
@@ -318,8 +324,7 @@
 						confirmFunction = () => {}
 						notConfirmFunction = () => {}
 					}}
-					class="font-intel-mono rounded-br-lg flex-1 p-2 hover:bg-white/5 transition duration-200 text-base"
-					>No</button
+					class="rounded-lg flex-1 p-1.5 text-base text-black bg-neutral-50 font-medium">No</button
 				>
 			</div>
 		</section>

@@ -20,7 +20,7 @@
 		ws.addEventListener("open", () => {})
 	})
 
-	let time = 60 * 2
+	let time = 60 * 20
 	let increment = 1
 
 	const joinQueue = ({ time, increment }: { time: number; increment: number }) =>
