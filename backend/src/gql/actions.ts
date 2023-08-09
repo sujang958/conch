@@ -3,7 +3,11 @@ import { parseCookie } from "../utils/cookie.js"
 import { verify } from "../auth/jwt.js"
 
 export const userAction = (
-  callback: (user: { id: string }, arg: any) => any
+  callback: (
+    user: { id: string },
+    arg: any,
+    ctx: mercurius.MercuriusContext,
+  ) => any,
 ) => {
   return async (_: any, arg: any, ctx: mercurius.MercuriusContext) => {
     const cookie = parseCookie(ctx.req.headers.cookie)
@@ -12,7 +16,7 @@ export const userAction = (
     const user = await verify(cookie.token)
     if (!user) return null
 
-    return await callback(user, arg)
+    return await callback(user, arg, ctx)
   }
 }
 
@@ -20,4 +24,3 @@ export const publicAction =
   (callback: (arg: any, ctx: mercurius.MercuriusContext) => any) =>
   async (_: any, arg: any, ctx: mercurius.MercuriusContext) =>
     await callback(arg, ctx)
-  

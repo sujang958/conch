@@ -6,6 +6,7 @@ import { me } from "./queries/me.js"
 import { changeBio } from "./mutations/changeBio.js"
 import { changeName } from "./mutations/changeName.js"
 import { login } from "./mutations/login.js"
+import { logout } from "./mutations/logout.js"
 
 const buildContext = async (req: FastifyRequest, reply: FastifyReply) => ({
   req,
@@ -30,13 +31,14 @@ const resolvers: IResolvers = {
           await prisma.user.findUnique({
             where: { id },
             include: { blackGames: true, whiteGames: true, wonGames: true },
-          })
-        )
+          }),
+        ),
       )
     },
   },
   Mutation: {
     login,
+    logout,
     changeBio,
     changeName,
   },

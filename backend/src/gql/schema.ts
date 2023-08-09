@@ -61,6 +61,7 @@ export const schema = gql`
 
   type Mutation {
     login(idToken: String!): User
+    logout: Boolean
     changeName(name: String!): User
     changeBio(bio: String!): User
   }
