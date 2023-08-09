@@ -76,6 +76,9 @@ export const eventRes = z.union([
     type: z.literal("ERROR"),
     message: z.string(),
   }),
+  z.object({
+    type: z.literal("NOT_FOUND"),
+  }),
 ])
 
 export type EventRes = z.infer<typeof eventRes>

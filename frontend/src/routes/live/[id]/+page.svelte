@@ -70,6 +70,9 @@
 			console.log(event)
 
 			switch (event.type) {
+				case "NOT_FOUND":
+					toast.error("Game not found", { position: "bottom-center", duration: 10_000 })
+					break
 				case "BOARD":
 					game.load(event.fen)
 					// game.loadPgn(event.pgn)
@@ -123,7 +126,7 @@
 		})
 
 		ws.addEventListener("close", () => {
-			// TODO: add an alert that shows "you're disconnected"
+			toast.error("Disconnected from the server!")
 		})
 	})
 
@@ -192,7 +195,7 @@
 </script>
 
 {#if gameEnded && newElo}
-	<div class="grid place-items-center fixed inset-0 h-screen z-50">
+	<div class="grid place-items-center fixed inset-0 h-screen z-50 text-black">
 		<div class="rounded-lg bg-neutral-50 py-5 px-6 flex flex-col items-center">
 			<p class="text-3xl font-bold">{won != null ? (won ? "Won" : "Lost") : "Draw"}</p>
 			<p class="text-base">by {endReason ?? "unknown issues"}</p>

@@ -141,7 +141,7 @@
 						toast.promise(joinQueue({ time, increment }), {
 							error: (reason) => reason,
 							success: "Game Found",
-							loading: "Looking for Opponent"
+							loading: "Looking for the opponent"
 						})
 					}}
 					class="rounded-xl bg-neutral-200 text-neutral-800 text-center font-semibold py-2.5 text-2xl"

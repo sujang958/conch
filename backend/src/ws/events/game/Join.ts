@@ -24,10 +24,6 @@ const JoinEvent: EventFile = {
     )
       return
 
-    const households = getOrCreate(gameHouseholds, rawGameId, [])
-
-    households.push({ socket, id: user?.id ?? null })
-
     const [pgn, fen, time, players] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),
       await redisClient.get(`${gameId}:fen`),
@@ -35,7 +31,16 @@ const JoinEvent: EventFile = {
       await redisClient.hgetall(`${gameId}:players`),
     ])
 
-    if (pgn == null || !fen || !time) return // TODO: add an event that makes the player get redirected to main page
+    if (pgn == null || !fen || !time) {
+      socket.send(JSON.stringify({ type: "NOT_FOUND" } satisfies EventRes))
+      socket.close()
+
+      return
+    }
+
+    const households = getOrCreate(gameHouseholds, rawGameId, [])
+
+    households.push({ socket, id: user?.id ?? null })
 
     const res = JSON.stringify({
       type: "BOARD",
