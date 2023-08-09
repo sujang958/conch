@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { goto } from "$app/navigation"
 	import { page } from "$app/stores"
 	import Board from "$lib/Board.svelte"
 	import PlayerCard from "$lib/PlayerCard.svelte"
+	import { user } from "$lib/stores/user"
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"
 	import toast from "svelte-french-toast"
@@ -59,6 +61,7 @@
 	 * in ms
 	 */
 	let lastMovedTime = -1
+	let players = { black: "", white: "" }
 
 	// TODO: add supports for spectators
 
@@ -78,6 +81,7 @@
 					game.load(event.fen)
 					// game.loadPgn(event.pgn)
 
+					players = event.players
 					time = { white: event.time.white, black: event.time.black }
 					lastMovedTime = event.time.lastMovedTime
 
@@ -166,6 +170,8 @@
 		clearInterval(timer)
 	})
 
+	// TODO: add removeEventLIstener socket
+
 	const movePiece = (): boolean => {
 		try {
 			ws.send(`MOVE ${JSON.stringify({ ...move, gameId })}`)
@@ -218,8 +224,10 @@
 					class="bg-neutral-950 text-white font-semibold text-sm rounded-lg px-4 py-2"
 					>New game</button
 				>
+				<!-- TODO: implement "New Game" button -->
 				<button
 					type="button"
+					on:click={() => goto("/")}
 					class="bg-neutral-200 text-black font-semibold text-sm rounded-lg px-4 py-2"
 					>Go lobby</button
 				>
@@ -242,93 +250,96 @@
 		}}
 	/>
 
-	<div class="flex flex-col w-1/6 gap-y-4">
-		<section class="bg-neutral-900 rounded-xl p-4 flex flex-col justify-between h-96">
-			<PlayerCard>
-				<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
-					{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
+	{#if $user && typeof $user !== "string" && myColor}
+		<div class="flex flex-col w-1/6 gap-y-4">
+			<section class="bg-neutral-900 rounded-xl p-4 flex flex-col justify-between h-96">
+				<PlayerCard userId={players[myColor == "white" ? "black" : "white"]}>
+					<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
+						{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
+					</div>
+				</PlayerCard>
+
+				<div class="grid grid-cols-2 gap-2 overflow-auto py-4">
+					{#each history as move}
+						<p>{move}</p>
+					{/each}
 				</div>
-			</PlayerCard>
 
-			<div class="grid grid-cols-2 gap-2 overflow-auto py-4">
-				{#each history as move}
-					<p>{move}</p>
-				{/each}
-			</div>
+				<PlayerCard userId={$user.id}>
+					<div
+						class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
+						(myColor == 'white' ? 'w' : 'b')
+							? 'bg-black text-neutral-700'
+							: ''}"
+					>
+						{convertToMMSS(time[myColor])}
+					</div>
+				</PlayerCard>
+			</section>
 
-			<PlayerCard>
-				<div
-					class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
-					(myColor == 'white' ? 'w' : 'b')
-						? 'bg-black text-neutral-700'
-						: ''}"
-				>
-					{convertToMMSS(time[myColor])}
-				</div>
-			</PlayerCard>
-		</section>
-
-		<section
-			class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative p-2 gap-x-3"
-		>
-			<button
-				type="button"
-				class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
-				on:click={() => {
-					confirmMessage = "Request a draw?"
-					confirmDescription = "You won't be able to redo this action"
-					confirmFunction = () => {
-						ws.send(`DRAW_REQUEST ${JSON.stringify({ gameId })}`)
-						toast.success("Requested a draw")
-					}
-					confirmWindowShown = true
-				}}>Draw</button
+			<section
+				class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative p-2 gap-x-3"
 			>
-			<button
-				type="button"
-				class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
-				on:click={() => {
-					confirmMessage = "Are you surrendering?"
-					confirmDescription = "This action cannot be redone."
-					confirmFunction = () => {
-						ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
-					}
-					confirmWindowShown = true
-				}}>Resign</button
-			>
-		</section>
-
-		<section
-			class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown
-				? 'opacity-100'
-				: 'opacity-0'} focus:opacity-100 text-center p-4 flex flex-col gap-y-4"
-		>
-			<p class="font-semibold text-2xl">{confirmMessage}</p>
-			<p class="text-base text-neutral-400">{confirmDescription}</p>
-			<div class="flex flex-row items-center justify-evenly mt-3 gap-x-2">
 				<button
 					type="button"
+					class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
 					on:click={() => {
-						confirmFunction()
-						confirmWindowShown = false
-						confirmFunction = () => {}
-						notConfirmFunction = () => {}
-					}}
-					class="rounded-lg flex-1 p-1.5 text-base text-white bg-red-500 font-medium">Yes</button
+						confirmMessage = "Request a draw?"
+						confirmDescription = "You won't be able to redo this action"
+						confirmFunction = () => {
+							ws.send(`DRAW_REQUEST ${JSON.stringify({ gameId })}`)
+							toast.success("Requested a draw")
+						}
+						confirmWindowShown = true
+					}}>Draw</button
 				>
 				<button
 					type="button"
+					class="font-semibold rounded-lg flex-1 p-2 bg-neutral-200 text-black text-base"
 					on:click={() => {
-						notConfirmFunction()
-						confirmWindowShown = false
-						confirmFunction = () => {}
-						notConfirmFunction = () => {}
-					}}
-					class="rounded-lg flex-1 p-1.5 text-base text-black bg-neutral-50 font-medium">No</button
+						confirmMessage = "Are you surrendering?"
+						confirmDescription = "This action cannot be redone."
+						confirmFunction = () => {
+							ws.send(`RESIGN ${JSON.stringify({ gameId })}`)
+						}
+						confirmWindowShown = true
+					}}>Resign</button
 				>
-			</div>
-		</section>
-	</div>
+			</section>
+
+			<section
+				class="rounded-lg bg-neutral-900 transition duration-100 {confirmWindowShown
+					? 'opacity-100'
+					: 'opacity-0'} focus:opacity-100 text-center p-4 flex flex-col gap-y-4"
+			>
+				<p class="font-semibold text-2xl">{confirmMessage}</p>
+				<p class="text-base text-neutral-400">{confirmDescription}</p>
+				<div class="flex flex-row items-center justify-evenly mt-3 gap-x-2">
+					<button
+						type="button"
+						on:click={() => {
+							confirmFunction()
+							confirmWindowShown = false
+							confirmFunction = () => {}
+							notConfirmFunction = () => {}
+						}}
+						class="rounded-lg flex-1 p-1.5 text-base text-white bg-red-500 font-medium">Yes</button
+					>
+					<button
+						type="button"
+						on:click={() => {
+							notConfirmFunction()
+							confirmWindowShown = false
+							confirmFunction = () => {}
+							notConfirmFunction = () => {}
+						}}
+						class="rounded-lg flex-1 p-1.5 text-base text-black bg-neutral-50 font-medium"
+						>No</button
+					>
+				</div>
+			</section>
+		</div>
+	{/if}
 </main>
 
 By &lt;a href=&quot;//commons.wikimedia.org/wiki/User:Cburnett&quot;

@@ -33,6 +33,7 @@ export const eventRes = z.union([
     pgn: z.string(),
     fen: z.string(),
     time: z.record(z.string(), z.number()),
+    players: z.record(z.string(), z.string()),
     for: z.union([z.literal("white"), z.literal("black")]).nullish(),
   }),
   z.object({

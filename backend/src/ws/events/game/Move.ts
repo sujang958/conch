@@ -101,18 +101,19 @@ const MoveEvent: EventFile = {
         gameId: gameId,
         time: Object.fromEntries(
           Object.entries(await redisClient.hgetall(`${gameId}:time`)).map(
-            ([name, value]) => [name, Number(value)]
-          )
+            ([name, value]) => [name, Number(value)],
+          ),
         ),
         pgn: newPgn,
         fen: newFen,
+        players,
       } satisfies EventRes)
 
       households
         .filter(
           ({ socket }) =>
             socket.readyState !== socket.CLOSED &&
-            socket.readyState !== socket.CLOSING
+            socket.readyState !== socket.CLOSING,
         )
         .forEach(async ({ socket }) => {
           socket.send(res)
@@ -139,7 +140,7 @@ const MoveEvent: EventFile = {
 
       gameHouseholds.set(
         rawGameId,
-        households.filter((v) => v)
+        households.filter((v) => v),
       )
     } catch (e) {
       console.log(e)

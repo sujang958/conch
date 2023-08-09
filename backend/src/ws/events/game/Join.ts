@@ -47,6 +47,7 @@ const JoinEvent: EventFile = {
       gameId: rawGameId,
       pgn,
       fen,
+      players,
       time: Object.fromEntries(
         Object.entries(time).map(([name, value]) => [name, Number(value)]),
       ),
