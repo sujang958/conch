@@ -69,10 +69,10 @@ export const loginWithIdToken = async (idToken: string) => {
 		idToken
 	})
 
-	if (typeof data !== "object") throw new Error("Cannot login")
-	if (!data) throw new Error("Cannot login")
-	if (!("login" in data)) throw new Error("Cannot login")
-	if (!data.login) throw new Error("Cannot login")
+	if (typeof data !== "object") return null
+	if (!data) return null
+	if (!("login" in data)) return null
+	if (!data.login) return null
 
 	const user = parse(userSchema, data.login)
 

@@ -29,4 +29,4 @@ export const userSchema = object({
 
 export type UserType = Output<typeof userSchema>
 
-export const user = writable<UserType | null>(null)
+export const user = writable<UserType | null | "LOADING">("LOADING")

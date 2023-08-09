@@ -131,7 +131,7 @@
 	{/if}
 
 	<div class="bg-neutral-900 rounded-xl w-1/6 p-4 flex flex-col justify-between h-96">
-		{#if $user}
+		{#if $user && typeof $user !== "string"}
 			<div class="flex flex-col gap-y-4">
 				<button class="rounded-xl bg-neutral-800 text-center font-semibold py-4 text-2xl"
 					>2 | 1</button
@@ -151,7 +151,7 @@
 			<div class="flex flex-row items-center justify-between pb-1">
 				<div class="flex flex-row items-center gap-x-3">
 					<img
-						src="/popcat-with-bg.jpg"
+						src={$user.picture}
 						alt="pfp"
 						class="rounded-lg w-8 h-8 object-contain"
 						draggable="false"
@@ -181,6 +181,10 @@
 						/>
 					</svg>
 				</button>
+			</div>
+		{:else if $user == "LOADING"}
+			<div class="w-full h-full flex flex-col justify-center items-center gap-y-2">
+				<p class="text-2xl font-semibold">Loading</p>
 			</div>
 		{:else}
 			<div class="w-full h-full flex flex-col justify-center items-center gap-y-2">
