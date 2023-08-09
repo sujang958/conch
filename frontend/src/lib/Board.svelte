@@ -2,7 +2,7 @@
 	import { getSquare, type Move } from "$lib/board"
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
-	import { toReversed } from "./utils"
+	import { toReversed } from "./utils/toReversed"
 
 	export let onMove: ((move: Move) => any) | null = null
 	export let afterMove: (...args: any[]) => any = () => {}
