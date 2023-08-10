@@ -166,7 +166,10 @@
 		}` as Square
 
 	const isLegalSquare = (fromSquare: any, toSquare: Square) =>
-		game.moves({ square: fromSquare }).includes(toSquare)
+		game
+			.moves({ square: fromSquare, verbose: true })
+			.map((move) => move.to)
+			.includes(toSquare)
 
 	$: if (promotionWindow) {
 		if (isPromoting) promotionWindow.style.display = "grid"
@@ -279,6 +282,8 @@
 
 						return
 					}
+
+					console.log(game.moves({ square: "g1" }))
 
 					if (piece && piece instanceof HTMLImageElement) clickedPiece = piece
 				}}
