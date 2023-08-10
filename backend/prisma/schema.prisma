@@ -14,7 +14,7 @@ model User {
   elo        Int      @default(1200)
   createdAt  DateTime @default(now())
   updatedAt DateTime  @updatedAt
-  name       String   @default("unnamed")
+  name       String   @default("unnamed") @db.VarChar(50)
   email      String   @unique
   blackGames Game[]   @relation("black")
   whiteGames Game[]   @relation("white")
