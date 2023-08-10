@@ -28,8 +28,6 @@
 		if (typeof res !== "object") return
 		if (!("user" in res)) return // TODO: show some error typa shits
 
-		console.log(res)
-
 		user = parse(partialUserSchema, res.user)
 	})
 </script>

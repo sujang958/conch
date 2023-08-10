@@ -1,16 +1,27 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { auth, githubProvider, googleProvider } from "$lib/auth/firebase"
+	import { user } from "$lib/stores/user"
 	import { signInWithPopup } from "firebase/auth"
 	import toast from "svelte-french-toast"
+
+	const checkUser = () => {
+		if (!$user || $user == "LOADING") return window.setTimeout(checkUser, 100)
+
+		if ($user.name == "unnamed" && !localStorage.getItem("beenToChangeName"))
+			return goto("/auth/changeName")
+
+		localStorage.setItem("beenToChangeName", "1")
+
+		goto("/")
+	}
 
 	const login = async (method: "GOOGLE" | "GITHUB") => {
 		const provider = method == "GOOGLE" ? googleProvider : githubProvider
 
 		await signInWithPopup(auth, provider)
 
-		goto("/")
-		// TODO:  onAuthStateChange에다가 로그인 초기 1회 시 이름이 unnamed라면 changeName 페이지? 로 이동하고 ls에 저장하여 다음부터 이동 방지. 로그아웃 시 ls에 저장된 거 초기화
+		checkUser()
 	}
 </script>
 

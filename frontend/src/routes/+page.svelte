@@ -3,7 +3,7 @@
 	import Board from "$lib/Board.svelte"
 	import PlayerCard from "$lib/PlayerCard.svelte"
 	import { auth } from "$lib/auth/firebase"
-	import { user } from "$lib/stores/user"
+	import { logout, user } from "$lib/stores/user"
 	import { graphQLClient } from "$lib/utils/graphql"
 	import { Chess } from "chess.js"
 	import { gql } from "graphql-request"
@@ -157,12 +157,7 @@
 					type="button"
 					class="rounded-full p-1 transition duration-200 hover:bg-white/10"
 					on:click={() => {
-						graphQLClient.request(gql`
-							mutation Logout {
-								logout
-							}
-						`)
-						auth.signOut()
+						logout()
 					}}
 					><svg
 						xmlns="http://www.w3.org/2000/svg"

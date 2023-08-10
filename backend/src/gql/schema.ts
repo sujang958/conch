@@ -21,7 +21,7 @@ export const schema = gql`
     elo: Int!
     createdAt: String!
   }
-
+  
   type Game {
     id: String!
     pgn: String!
