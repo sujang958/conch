@@ -26,6 +26,8 @@
 	let draggingPiece: HTMLImageElement | null = null
 	let draggingPieceCopy: HTMLImageElement | null = null
 
+	let clickedPiece: HTMLImageElement | null = null
+
 	let move: Move = { from: "", to: "" }
 	let promotionWindow: HTMLDivElement
 	let isPromoting = false
@@ -142,12 +144,29 @@
 		} finally {
 			history = [...game.history()]
 			move.promotion = undefined
+			clickedPiece = null
 			afterMove()
 		}
 	}
 
 	// TODO: sepearte into several file
 	// TODO: implement promotions for black
+
+	const getSquareNotation = ({
+		x,
+		y,
+		colorFor
+	}: {
+		x: number
+		y: number
+		colorFor: "white" | "black"
+	}) =>
+		`${String.fromCharCode(colorFor == "white" ? x + 65 : 72 - x).toLowerCase()}${
+			colorFor == "white" ? 8 - y : y + 1
+		}` as Square
+
+	const isLegalSquare = (fromSquare: any, toSquare: Square) =>
+		game.moves({ square: fromSquare }).includes(toSquare)
 
 	$: if (promotionWindow) {
 		if (isPromoting) promotionWindow.style.display = "grid"
@@ -217,14 +236,18 @@
 	{#each colorFor == "white" ? board : toReversed(board) as row, i}
 		{#each colorFor == "white" ? row : toReversed(row) as item, j}
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<div
-				id={`${String.fromCharCode(colorFor == "white" ? j + 65 : 72 - j).toLowerCase()}${
-					colorFor == "white" ? 8 - i : i + 1
-				}`}
+				id={getSquareNotation({ x: j, y: i, colorFor })}
 				class={`${decideColor(
 					i,
 					j
-				)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative`}
+				)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative ${
+					clickedPiece &&
+					isLegalSquare(clickedPiece.parentElement?.id, getSquareNotation({ x: j, y: i, colorFor }))
+						? "after:rounded-full after:m-3 after:bg-neutral-500/50 after:w-9 after:h-9"
+						: ""
+				}`}
 				draggable="false"
 				on:mouseenter={(event) => {
 					if (!draggingPiece) return
@@ -237,6 +260,30 @@
 
 					const square = getSquare(event.target)
 					square?.classList.remove("brightness-75")
+				}}
+				on:click={(event) => {
+					const square = getSquare(event.target)
+					if (!square) return
+
+					const piece = square?.firstElementChild
+
+					if (
+						clickedPiece &&
+						isLegalSquare(
+							clickedPiece.parentElement?.id,
+							getSquareNotation({ x: j, y: i, colorFor })
+						)
+					) {
+						draggingPiece = clickedPiece
+						onDrop(square)
+
+						return
+					}
+
+					if (piece && piece instanceof HTMLImageElement) clickedPiece = piece
+				}}
+				on:blur={(event) => {
+					console.log(event)
 				}}
 			>
 				{#if item}
