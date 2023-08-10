@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { auth, githubProvider, googleProvider } from "$lib/auth/firebase"
-	import {  signInWithPopup } from "firebase/auth"
+	import { signInWithPopup } from "firebase/auth"
 	import toast from "svelte-french-toast"
 
 	const login = async (method: "GOOGLE" | "GITHUB") => {
 		const provider = method == "GOOGLE" ? googleProvider : githubProvider
-		
+
 		await signInWithPopup(auth, provider)
 
 		goto("/")
+		// TODO:  onAuthStateChange에다가 로그인 초기 1회 시 이름이 unnamed라면 changeName 페이지? 로 이동하고 ls에 저장하여 다음부터 이동 방지. 로그아웃 시 ls에 저장된 거 초기화
 	}
 </script>
 
@@ -27,7 +28,12 @@
 			</section>
 			<div class="border-t border-neutral-800 -mt-2 pt-6 w-full flex flex-col gap-y-4">
 				<button
-					on:click={() => toast.promise(login("GOOGLE"), {error: (err) => err, loading: "Handling login", success: "Successfully logged in!"})}
+					on:click={() =>
+						toast.promise(login("GOOGLE"), {
+							error: (err) => err,
+							loading: "Handling login",
+							success: "Successfully logged in!"
+						})}
 					type="button"
 					class="bg-white border border-neutral-900 text-black rounded-lg w-full py-2 font-semibold text-sm flex flex-row items-center justify-center gap-x-2"
 				>
