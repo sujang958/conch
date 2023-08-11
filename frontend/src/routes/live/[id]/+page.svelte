@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { page } from "$app/stores"
-	import Board from "$lib/Board.svelte"
-	import PlayerCard from "$lib/PlayerCard.svelte"
+	import Board from "$lib/components/Board.svelte"
+	import PlayerCard from "$lib/components/PlayerCard.svelte"
 	import { user } from "$lib/stores/user"
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"

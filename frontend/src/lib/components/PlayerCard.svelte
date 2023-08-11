@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { gql } from "graphql-request"
-	import { graphQLClient } from "./utils/graphql"
+	import { graphQLClient } from "../utils/graphql"
 	import { number, object, parse, string, type Output } from "valibot"
 
 	export let userId = ""
