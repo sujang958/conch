@@ -248,7 +248,7 @@
 				)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative ${
 					clickedPiece &&
 					isLegalSquare(clickedPiece.parentElement?.id, getSquareNotation({ x: j, y: i, colorFor }))
-						? "after:rounded-full after:m-3 after:bg-neutral-500/50 after:w-9 after:h-9"
+						? "after:rounded-full after:m-3 after:bg-neutral-500/50 after:w-7 after:h-7 after:xl:w-8 after:xl:h-8"
 						: ""
 				}`}
 				draggable="false"
@@ -264,7 +264,7 @@
 					const square = getSquare(event.target)
 					square?.classList.remove("brightness-75")
 				}}
-				on:click={(event) => {
+				on:mousedown={(event) => {
 					const square = getSquare(event.target)
 					if (!square) return
 
@@ -283,12 +283,7 @@
 						return
 					}
 
-					console.log(game.moves({ square: "g1" }))
-
 					if (piece && piece instanceof HTMLImageElement) clickedPiece = piece
-				}}
-				on:blur={(event) => {
-					console.log(event)
 				}}
 			>
 				{#if item}
