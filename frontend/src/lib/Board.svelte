@@ -136,6 +136,8 @@
 
 			board = game.board()
 
+			clickedPiece = null
+
 			return true
 		} catch (e) {
 			console.log(String(e))
@@ -144,7 +146,7 @@
 		} finally {
 			history = [...game.history()]
 			move.promotion = undefined
-			clickedPiece = null
+
 			afterMove()
 		}
 	}
@@ -240,7 +242,9 @@
 		{#each colorFor == "white" ? row : toReversed(row) as item, j}
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<div
+				tabindex="0"
 				id={getSquareNotation({ x: j, y: i, colorFor })}
 				class={`${decideColor(
 					i,
@@ -248,7 +252,7 @@
 				)} filter transition duration-100 aspect-square flex flex-col items-center justify-center square relative ${
 					clickedPiece &&
 					isLegalSquare(clickedPiece.parentElement?.id, getSquareNotation({ x: j, y: i, colorFor }))
-						? "after:rounded-full after:m-3 after:bg-neutral-500/50 after:w-7 after:h-7 after:xl:w-8 after:xl:h-8"
+						? "after:rounded-full after:absolute after:m-3 after:bg-neutral-500/50 after:w-7 after:h-7 after:xl:w-8 after:xl:h-8"
 						: ""
 				}`}
 				draggable="false"
@@ -284,6 +288,14 @@
 					}
 
 					if (piece && piece instanceof HTMLImageElement) clickedPiece = piece
+				}}
+				on:blur={(event) => {
+					if (!clickedPiece) return
+
+					const square = getSquare(event.target)
+					if (clickedPiece.parentElement?.id !== square?.id) return
+
+					clickedPiece = null
 				}}
 			>
 				{#if item}
