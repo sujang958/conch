@@ -4,26 +4,37 @@ import setupWebsocket from "./ws/index.js"
 import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
 import cors from "@fastify/cors"
+import { z } from "zod"
+
+const envSchema = z.object({
+  NODE_ENV: z.union([z.literal("development"), z.literal("production")]),
+  REDIS_URL: z.string(),
+  DB_URL: z.string(),
+  JWT_SECRET: z.string(),
+})
+
+type EnvType = z.infer<typeof envSchema>
 
 declare global {
   namespace NodeJS {
-    interface ProcessEnv {
-      NODE_ENV: "development" | "production"
-      REDIS_URL: string
-      DB_URL: string
-    }
+    interface ProcessEnv extends EnvType {}
   }
 }
 
 config()
+
+const { sucess } = envSchema.safeParse(process.env)
+
+if (!sucess) {
+  console.error("Invalid .env file")
+  process.exit(401)
+}
 
 const PORT = Number(process.env.PORT)
 
 const fastify = Fastify({
   logger: true,
 })
-
-if (!process.env.COOKIE_SECRET) process.exit(404)
 
 fastify.register(WebsocketPlugin)
 fastify.register(setupWebsocket)
@@ -36,26 +47,11 @@ fastify.register(cors, {
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
 })
 
-setupGraphQL(fastify)
+await setupGraphQL(fastify)
 
-const main = async () => {
-  // console.log(
-  //   await createGame({
-  //     players: ["clkw7hjda0000uvcglmsxkvls", "clkw7hjib0001uvcg7l5zpmlf"],
-  //     increment: 0,
-  //     time: 30,
-  //   }),
-  // )
+const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
 
-  try {
-    const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
-    console.log(res)
-  } catch (err) {
-    fastify.log.error(err)
-  }
-}
-
-main()
+console.log(res)
 
 process.on("uncaughtException", (error) => {
   console.log(error)
