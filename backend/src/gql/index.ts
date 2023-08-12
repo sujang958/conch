@@ -14,6 +14,7 @@ import {
   fastifyApolloHandler,
 } from "@as-integrations/fastify"
 import { GraphQLResolveInfo } from "graphql"
+import { games } from "./queries/games.js"
 
 export type Context = {
   req: FastifyRequest
@@ -48,6 +49,7 @@ const resolvers: Resolvers = {
         )
       )
     },
+    games,
   },
   Mutation: {
     login,
