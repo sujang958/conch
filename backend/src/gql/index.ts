@@ -15,6 +15,7 @@ import {
 } from "@as-integrations/fastify"
 import { GraphQLResolveInfo } from "graphql"
 import { games } from "./queries/games.js"
+import { user } from "./queries/user.js"
 
 export type Context = {
   req: FastifyRequest
@@ -39,16 +40,7 @@ const context: ApolloFastifyContextFunction<Context> = async (req, reply) => ({
 const resolvers: Resolvers = {
   Query: {
     me,
-    async user(_, { id }) {
-      return JSON.parse(
-        JSON.stringify(
-          await prisma.user.findUnique({
-            where: { id },
-            include: { blackGames: true, whiteGames: true, wonGames: true },
-          })
-        )
-      )
-    },
+    user,
     games,
   },
   Mutation: {
