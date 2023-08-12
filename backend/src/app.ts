@@ -23,9 +23,9 @@ declare global {
 
 config()
 
-const { sucess } = envSchema.safeParse(process.env)
+const { success } = envSchema.safeParse(process.env)
 
-if (!sucess) {
+if (!success) {
   console.error("Invalid .env file")
   process.exit(401)
 }

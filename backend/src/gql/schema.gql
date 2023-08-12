@@ -1,4 +1,3 @@
-
 type User {
   id: String!
   name: String
@@ -52,9 +51,15 @@ type GameWithoutPlayers {
   winnerId: String
 }
 
+type Games {
+  wonGames: [Game]!
+  whiteGames: [Game]!
+  blackGames: [Game]!
+}
+
 type Query {
   user(id: String!): User
-  game(id: String!): Game
+  games(userId: String!): Games
   me: User
 }
 
