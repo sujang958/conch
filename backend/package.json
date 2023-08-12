@@ -31,8 +31,6 @@
     "graphql": "^16.7.1",
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.1",
-    "mercurius": "^13.1.0",
-    "mercurius-codegen": "^5.0.3",
     "nanoid": "^4.0.2",
     "vegot": "^1.0.7",
     "zod": "^3.21.4"
