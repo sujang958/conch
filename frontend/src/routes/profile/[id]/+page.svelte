@@ -65,6 +65,10 @@
 					endedAt
 					createdAt
 
+					whiteId
+					blackId
+					winnerId
+
 					white {
 						name
 					}
@@ -83,6 +87,10 @@
 					increment
 					endedAt
 					createdAt
+
+					whiteId
+					blackId
+					winnerId
 
 					white {
 						name
@@ -103,6 +111,10 @@
 					endedAt
 					createdAt
 
+					whiteId
+					blackId
+					winnerId
+
 					white {
 						name
 					}
@@ -119,6 +131,8 @@
 
 	const fetchGames = async (userId: string) => {
 		const res = await graphQLClient.request(userQuery, { userId })
+
+		console.log(res.user)
 
 		return userQueryResSchema.parse(res.user)
 	}
