@@ -1,4 +1,4 @@
-import { userSchema, userWithoutGamesSchema } from "$lib/stores/user"
+import { userSchema, userSchemaWithoutGames } from "$lib/stores/user"
 import { GraphQLClient, gql } from "graphql-request"
 import { omit, parse } from "valibot"
 
@@ -35,7 +35,7 @@ export const loginWithIdToken = async (idToken: string) => {
 	if (!("login" in data)) return null
 	if (!data.login) return null
 
-	const user = parse(userWithoutGamesSchema, data.login)
+	const user = parse(userSchemaWithoutGames, data.login)
 
 	return user
 }

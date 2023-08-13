@@ -3,7 +3,9 @@ type User {
   name: String
   picture: String!
   bio: String!
-  elo: Int!
+  bulletElo: Int!
+  blitzElo: Int!
+  rapidElo: Int!
   createdAt: String!
   whiteGames: [GameWithoutPlayers]!
   blackGames: [GameWithoutPlayers]!
@@ -15,7 +17,9 @@ type UserWithoutGames {
   name: String
   picture: String!
   bio: String!
-  elo: Int!
+  bulletElo: Int!
+  blitzElo: Int!
+  rapidElo: Int!
   createdAt: String!
 }
 

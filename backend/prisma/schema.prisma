@@ -11,9 +11,12 @@ model User {
   id         String   @id @default(cuid())
   picture    String   @default("https://popcat.click/twitter-card.jpg")
   bio        String   @default("im a noob")
-  elo        Int      @default(1200)
+  bulletElo  Int      @default(1200)
+  blitzElo   Int      @default(1200)
+  rapidElo   Int      @default(1200)
+  country    String   @default("🏁")
   createdAt  DateTime @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt  DateTime @updatedAt
   name       String   @default("unnamed") @db.VarChar(50)
   email      String   @unique
   blackGames Game[]   @relation("black")

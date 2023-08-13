@@ -2,9 +2,9 @@ import { auth } from "$lib/auth/firebase"
 import { graphQLClient } from "$lib/utils/graphql"
 import { gql } from "graphql-request"
 import { writable } from "svelte/store"
-import { array, nullish, number, object, string, type Output, omit } from "valibot"
+import { array, nullish, number, object, string, type Output, omit, merge } from "valibot"
 
-export const gameSchema = object({
+export const gameSchemaWithoutUsers = object({
 	id: string(),
 	pgn: string(),
 	reason: string(),
@@ -25,16 +25,25 @@ export const userSchema = object({
 	bio: string(),
 	elo: number(),
 	createdAt: string(),
-	whiteGames: array(gameSchema),
-	blackGames: array(gameSchema),
-	wonGames: array(gameSchema)
+	whiteGames: array(gameSchemaWithoutUsers),
+	blackGames: array(gameSchemaWithoutUsers),
+	wonGames: array(gameSchemaWithoutUsers)
 })
 
 export type UserType = Output<typeof userSchema>
 
-export const userWithoutGamesSchema = omit(userSchema, ["wonGames", "blackGames", "whiteGames"])
+export const userSchemaWithoutGames = omit(userSchema, ["wonGames", "blackGames", "whiteGames"])
 
-export type UserWithoutGamesType = Output<typeof userWithoutGamesSchema>
+export type UserWithoutGamesType = Output<typeof userSchemaWithoutGames>
+
+export const gameSchema = merge([
+	gameSchemaWithoutUsers,
+	object({
+		white: userSchemaWithoutGames,
+		black: userSchemaWithoutGames,
+		winner: nullish(userSchemaWithoutGames)
+	})
+])
 
 export const user = writable<UserWithoutGamesType | null | "LOADING">("LOADING")
 

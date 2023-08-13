@@ -1,8 +1,96 @@
 <script lang="ts">
 	import { page } from "$app/stores"
 	import GameCard from "$lib/components/GameCard.svelte"
+	import { graphQLClient } from "$lib/utils/graphql"
+	import { gql } from "graphql-request"
+	import { parse } from "graphql"
+	import type { TypedDocumentNode } from "@graphql-typed-document-node/core"
+	import { array, object, type Output } from "valibot"
+	import { gameSchema } from "$lib/stores/user"
 
-	console.log($page.params.id)
+	const gamesResSchema = object({
+		wonGames: array(gameSchema),
+		blackGames: array(gameSchema),
+		whiteGames: array(gameSchema)
+	})
+
+	type GamesRes = Output<typeof gamesResSchema>
+
+	const gameQuery: TypedDocumentNode<{ games: GamesRes }, { userId: string }> = parse(gql`
+		query User($userId: String!) {
+			user(id: $userId) {
+				name
+				createdAt
+				bio
+				elo
+				wonGames {
+					id
+					pgn
+					reason
+					time
+					increment
+					endedAt
+					createdAt
+
+					white {
+						name
+					}
+					black {
+						name
+					}
+					winner {
+						name
+					}
+				}
+				whiteGames {
+					id
+					pgn
+					reason
+					time
+					increment
+					endedAt
+					createdAt
+
+					white {
+						name
+					}
+					black {
+						name
+					}
+					winner {
+						name
+					}
+				}
+				blackGames {
+					id
+					pgn
+					reason
+					time
+					increment
+					endedAt
+					createdAt
+
+					white {
+						name
+					}
+					black {
+						name
+					}
+					winner {
+						name
+					}
+				}
+			}
+		}
+	`)
+
+	// const fetchGames = async (userId: string) => {
+	// 	const res = await graphQLClient.request(gameQuery, { userId })
+
+	// 	return gamesResSchema.parse(res.games)
+	// }
+
+	// let games: Promise<GamesRes> = fetchGames($page.params.id)
 </script>
 
 <main class="grid place-items-center w-full">
