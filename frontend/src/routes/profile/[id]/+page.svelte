@@ -55,7 +55,7 @@
 				bulletElo
 				rapidElo
 				blitzElo
-				elo
+				bio
 				wonGames {
 					id
 					pgn
