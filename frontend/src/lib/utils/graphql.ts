@@ -1,6 +1,6 @@
-import { userSchema } from "$lib/stores/user"
+import { userSchema, userWithoutGamesSchema } from "$lib/stores/user"
 import { GraphQLClient, gql } from "graphql-request"
-import { parse } from "valibot"
+import { omit, parse } from "valibot"
 
 // TODO: use env var
 export const graphQLClient = new GraphQLClient("http://localhost:3000/graphql", {
@@ -21,45 +21,6 @@ const loginMutation = gql`
 			bio
 			elo
 			createdAt
-			whiteGames {
-				id
-				pgn
-				reason
-				time
-				increment
-				endedAt
-				createdAt
-
-				whiteId
-				blackId
-				winnerId
-			}
-			blackGames {
-				id
-				pgn
-				reason
-				time
-				increment
-				endedAt
-				createdAt
-
-				whiteId
-				blackId
-				winnerId
-			}
-			wonGames {
-				id
-				pgn
-				reason
-				time
-				increment
-				endedAt
-				createdAt
-
-				whiteId
-				blackId
-				winnerId
-			}
 		}
 	}
 `
@@ -74,7 +35,7 @@ export const loginWithIdToken = async (idToken: string) => {
 	if (!("login" in data)) return null
 	if (!data.login) return null
 
-	const user = parse(userSchema, data.login)
+	const user = parse(userWithoutGamesSchema, data.login)
 
 	return user
 }

@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify"
-import prisma from "../../prisma/prisma.js"
 import { me } from "./queries/me.js"
 import { changeBio } from "./mutations/changeBio.js"
 import { changeName } from "./mutations/changeName.js"
@@ -9,7 +8,7 @@ import { ApolloServer } from "@apollo/server"
 import { readFileSync } from "fs"
 import { fileURLToPath } from "url"
 import { join } from "path"
-import {
+import fastifyApollo, {
   ApolloFastifyContextFunction,
   fastifyApolloHandler,
 } from "@as-integrations/fastify"
@@ -63,11 +62,7 @@ const setupGraphQL = async (fastify: FastifyInstance) => {
 
   await apollo.start()
 
-  fastify.route({
-    url: "/graphql",
-    method: ["POST", "OPTIONS"],
-    handler: fastifyApolloHandler(apollo, { context }),
-  })
+  await fastify.register(fastifyApollo(apollo), { context })
 }
 
 export default setupGraphQL

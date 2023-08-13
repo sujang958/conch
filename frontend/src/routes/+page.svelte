@@ -158,7 +158,8 @@
 						type="button"
 						class="rounded-full p-1 transition duration-200 hover:bg-white/10"
 						on:click={() => {
-							goto("/profile")
+							if ($user && $user !== "LOADING")
+								goto(`/profile/${$user.id}`)
 						}}
 						><svg
 							xmlns="http://www.w3.org/2000/svg"

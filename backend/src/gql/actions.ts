@@ -1,14 +1,9 @@
-import mercurius from "mercurius"
 import { parseCookie } from "../utils/cookie.js"
 import { verify } from "../auth/jwt.js"
 import { Context } from "./index.js"
 
 export const userAction = (
-  callback: (
-    user: { id: string },
-    arg: any,
-    ctx: Context,
-  ) => any,
+  callback: (user: { id: string }, arg: any, ctx: Context) => any,
 ) => {
   return async (_: any, arg: any, ctx: Context) => {
     const cookie = parseCookie(ctx.req.headers.cookie)

@@ -2,7 +2,7 @@ import { auth } from "$lib/auth/firebase"
 import { graphQLClient } from "$lib/utils/graphql"
 import { gql } from "graphql-request"
 import { writable } from "svelte/store"
-import { array, nullish, number, object, string, type Output } from "valibot"
+import { array, nullish, number, object, string, type Output, omit } from "valibot"
 
 export const gameSchema = object({
 	id: string(),
@@ -32,7 +32,11 @@ export const userSchema = object({
 
 export type UserType = Output<typeof userSchema>
 
-export const user = writable<UserType | null | "LOADING">("LOADING")
+export const userWithoutGamesSchema = omit(userSchema, ["wonGames", "blackGames", "whiteGames"])
+
+export type UserWithoutGamesType = Output<typeof userWithoutGamesSchema>
+
+export const user = writable<UserWithoutGamesType | null | "LOADING">("LOADING")
 
 export const logout = async () =>
 	await Promise.allSettled([

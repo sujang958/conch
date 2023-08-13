@@ -4,22 +4,13 @@ module.exports = {
 	theme: {
 		extend: {
 			fontFamily: {
-				pretendard: [
-					"Pretendard Variable",
-					"Pretendard",
-					"-apple-system",
-					"BlinkMacSystemFont",
-					"system-ui",
-					"Roboto",
-					"Helvetica Neue",
-					"Segoe UI",
-					"Apple SD Gothic Neo",
-					"Noto Sans KR",
-					"Malgun Gothic",
-					"Apple Color Emoji",
-					"Segoe UI Emoji",
-					"Segoe UI Symbol",
+				inter: [
+					"Inter",
+					"Noto Color Emoji",
 					"sans-serif"
+				],
+				'noto-color-emoji': [
+					"Noto Color Emoji",
 				],
 				"intel-mono": ["intelone-mono-font-family-regular", "Consolas", "sans-serif"]
 			}
