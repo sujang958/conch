@@ -8,7 +8,9 @@
 	const partialUserSchema = object({
 		name: string(),
 		picture: string(),
-		elo: number()
+		bulletElo: number(),
+		rapidElo: number(),
+		blitzElo: number()
 	})
 
 	let user: Output<typeof partialUserSchema>
@@ -17,7 +19,9 @@
 		query User($id: String!) {
 			user(id: $id) {
 				name
-				elo
+				bulletElo
+				rapidElo
+				blitzElo
 				picture
 			}
 		}
@@ -42,7 +46,9 @@
 				draggable="false"
 			/>
 			<p class="font-medium text-lg">
-				{user.name} &nbsp;<span class="text-neutral-400 text-xs">({user.elo})</span>
+				{user.name} &nbsp;<span class="text-neutral-400 text-xs"
+					>({Math.max(user.bulletElo, user.blitzElo, user.rapidElo)})</span
+				>
 			</p>
 		</div>
 		<slot />
