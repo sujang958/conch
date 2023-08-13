@@ -15,19 +15,12 @@ import fastifyApollo, {
 import { GraphQLResolveInfo } from "graphql"
 import { games } from "./queries/games.js"
 import { user } from "./queries/user.js"
+import { Resolvers } from "../__generated__/resolvers-types.js"
 
 export type Context = {
   req: FastifyRequest
   reply: FastifyReply
 }
-
-export type Resolvers = Record<
-  string,
-  Record<
-    string,
-    (parent: any, args: any, context: Context, info: GraphQLResolveInfo) => any
-  >
->
 
 const context: ApolloFastifyContextFunction<Context> = async (req, reply) => ({
   req,

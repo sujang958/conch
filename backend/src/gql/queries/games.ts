@@ -10,7 +10,7 @@ export const games = publicAction(async ({ userId }) => {
   if (!user) return
 
   return {
-    wonGames: user.wonGames,
+    dwonGames: user.wonGames,
     blackGames: user.blackGames,
     whiteGames: user.whiteGames,
   }

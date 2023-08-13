@@ -8,4 +8,4 @@ generates:
 
     config:
       useIndexSignature: true
-      contextType: "./src/gql/index#Context"
+      contextType: "../gql/index.js#Context"
