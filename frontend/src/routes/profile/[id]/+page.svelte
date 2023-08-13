@@ -30,7 +30,18 @@
 				wonGames: array(gameWithOnlyUsersName)
 			})
 		]),
-		["name", "picture", "createdAt", "bio", "elo", "wonGames", "blackGames", "whiteGames"]
+		[
+			"name",
+			"picture",
+			"createdAt",
+			"bio",
+			"bulletElo",
+			"rapidElo",
+			"blitzElo",
+			"wonGames",
+			"blackGames",
+			"whiteGames"
+		]
 	)
 
 	type UserQueryRes = Output<typeof userQueryResSchema>
@@ -41,7 +52,9 @@
 				name
 				picture
 				createdAt
-				bio
+				bulletElo
+				rapidElo
+				blitzElo
 				elo
 				wonGames {
 					id
@@ -141,16 +154,21 @@
 			<div class="py-4" />
 			<div class="flex flex-row items-stretch justify-between">
 				<section class="flex flex-col justify-between">
-					<p class="text-3xl font-semibold">sujang958 <span class="text-xl">🇰🇷</span></p>
-					<p class="text-sm mt-3 text-neutral-400">Joined on Mar 24 2023</p>
-					<p class="text-xl mt-6">im a noob</p>
+					<p class="text-3xl font-semibold">{user.name} <span class="text-xl">🇰🇷</span></p>
+					<p class="text-sm mt-3 text-neutral-400">{new Date(user.createdAt).toDateString()}</p>
+					<p class="text-xl mt-6">{user.bio}</p>
 				</section>
 				<section class="flex flex-col items-end text-right justify-between">
 					<p class="text-2xl font-semibold">ELO</p>
 					<p class="text-lg font-semibold mt-4">
-						1325 <span class="text-neutral-400">Current</span>
+						{user.rapidElo} <span class="text-neutral-400">Rapid</span>
 					</p>
-					<p class="text-lg font-semibold">1522 <span class=" text-neutral-400">Peak</span></p>
+					<p class="text-lg font-semibold">
+						{user.blitzElo} <span class=" text-neutral-400">Blitz</span>
+					</p>
+					<p class="text-lg font-semibold">
+						{user.bulletElo} <span class=" text-neutral-400">Bullet</span>
+					</p>
 				</section>
 			</div>
 			<div class="py-16 relative flex flex-col gap-y-4">

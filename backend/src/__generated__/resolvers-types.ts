@@ -19,7 +19,6 @@ export type Scalars = {
 };
 
 export type Game = {
-  __typename?: 'Game';
   blackId: Scalars['String']['output'];
   createdAt: Scalars['Date']['output'];
   endedAt: Scalars['Date']['output'];
@@ -84,7 +83,6 @@ export type QueryUserArgs = {
 };
 
 export type User = {
-  __typename?: 'User';
   bio: Scalars['String']['output'];
   blitzElo: Scalars['Int']['output'];
   bulletElo: Scalars['Int']['output'];
@@ -185,18 +183,23 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 ) => TResult | Promise<TResult>;
 
 
+/** Mapping of interface types */
+export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = ResolversObject<{
+  Game: ( GameWithUsers );
+  User: ( UserWithGamesWithUsers );
+}>;
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
-  Game: ResolverTypeWrapper<Game>;
+  Game: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Game']>;
   GameWithUsers: ResolverTypeWrapper<GameWithUsers>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  User: ResolverTypeWrapper<User>;
+  User: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['User']>;
   UserWithGamesWithUsers: ResolverTypeWrapper<UserWithGamesWithUsers>;
 }>;
 
@@ -204,13 +207,13 @@ export type ResolversTypes = ResolversObject<{
 export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
   Date: Scalars['Date']['output'];
-  Game: Game;
+  Game: ResolversInterfaceTypes<ResolversParentTypes>['Game'];
   GameWithUsers: GameWithUsers;
   Int: Scalars['Int']['output'];
   Mutation: {};
   Query: {};
   String: Scalars['String']['output'];
-  User: User;
+  User: ResolversInterfaceTypes<ResolversParentTypes>['User'];
   UserWithGamesWithUsers: UserWithGamesWithUsers;
 }>;
 
@@ -219,6 +222,7 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type GameResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Game'] = ResolversParentTypes['Game']> = ResolversObject<{
+  __resolveType: TypeResolveFn<'GameWithUsers', ParentType, ContextType>;
   blackId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   endedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
@@ -229,7 +233,6 @@ export type GameResolvers<ContextType = Context, ParentType extends ResolversPar
   time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   whiteId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   winnerId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type GameWithUsersResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GameWithUsers'] = ResolversParentTypes['GameWithUsers']> = ResolversObject<{
@@ -262,6 +265,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
+  __resolveType: TypeResolveFn<'UserWithGamesWithUsers', ParentType, ContextType>;
   bio?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   blitzElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   bulletElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
@@ -273,7 +277,6 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
   picture?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   rapidElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type UserWithGamesWithUsersResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserWithGamesWithUsers'] = ResolversParentTypes['UserWithGamesWithUsers']> = ResolversObject<{

@@ -3,7 +3,11 @@ import { redisClient } from "../../../db/redis.js"
 import { z } from "zod"
 import prisma from "../../../../prisma/prisma.js"
 import { individuals } from "../rooms.js"
-import { createGame } from "../../../db/games.js"
+import {
+  createGame,
+  getEloPropertyName,
+  getTimeKind,
+} from "../../../db/games.js"
 
 const joinGameParam = z.object({
   time: z.number({ description: "in seconds" }),
@@ -25,21 +29,21 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Invalid time settings",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
     if (parsedArg.data.time <= 0 || parsedArg.data.increment < 0)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: "Time and increment can't be negative",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
     if (parsedArg.data.time > INT4_MAX || parsedArg.data.increment > INT4_MAX)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: `Time and increment can't be greater than ${INT4_MAX}`,
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
 
     const allQueues = await redisClient.keys("queue:*")
@@ -51,7 +55,7 @@ const JoinGameEvent: EventFile = {
             .map((user) => user.trim().split(":"))
             .findIndex(([userId, _]) => userId == user.id) < 0
         )
-      })
+      }),
     )
 
     if (searched.includes(false))
@@ -59,7 +63,7 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "You're already in a queue",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
@@ -69,12 +73,15 @@ const JoinGameEvent: EventFile = {
       prisma.user.findUnique({ where: { id: user.id } }),
     ])
 
+    const timeKind = getTimeKind(parsedArg.data.time)
+    const eloPropertyName = getEloPropertyName(timeKind)
+
     if (!userInfo)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: "You can't be found in the database",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
 
     const users = queue
@@ -85,12 +92,15 @@ const JoinGameEvent: EventFile = {
       .filter(([id, _]) => id !== userInfo.id)
       .findIndex(
         ([_, elo]) =>
-          userInfo.elo - ELO_DEVIATION <= Number(elo) &&
-          Number(elo) <= userInfo.elo + ELO_DEVIATION
+          userInfo[eloPropertyName] - ELO_DEVIATION <= Number(elo) &&
+          Number(elo) <= userInfo[eloPropertyName] + ELO_DEVIATION,
       )
 
     if (availableUserIndex < 0) {
-      await redisClient.rpush(queueId, `${userInfo.id}:${userInfo.elo}`)
+      await redisClient.rpush(
+        queueId,
+        `${userInfo.id}:${userInfo[eloPropertyName]}`,
+      )
 
       return true
     }
@@ -111,7 +121,7 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Players can't be found",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
 
     const user1 = individuals.get(user.id)
@@ -122,14 +132,14 @@ const JoinGameEvent: EventFile = {
         JSON.stringify({
           type: "ERROR",
           message: "Players can't be found",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
     if (!user1.OPEN || !user2.OPEN)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
           message: "One of the two players disconnected",
-        } satisfies EventRes)
+        } satisfies EventRes),
       )
 
     const res = JSON.stringify({

@@ -1,6 +1,6 @@
 scalar Date
 
-type User {
+interface User {
   id: String!
   picture: String!
   bio: String!
@@ -31,7 +31,7 @@ type UserWithGamesWithUsers implements User {
   wonGames: [GameWithUsers]!
 }
 
-type Game {
+interface Game {
   id: String!
   increment: Int!
   pgn: String!

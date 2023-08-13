@@ -10,8 +10,8 @@ export const gameSchemaWithoutUsers = object({
 	reason: string(),
 	time: number(),
 	increment: number(),
-	endedAt: string(),
-	createdAt: string(),
+	endedAt: number(),
+	createdAt: number(),
 
 	whiteId: string(),
 	blackId: string(),
@@ -23,8 +23,10 @@ export const userSchema = object({
 	name: string(),
 	picture: string(),
 	bio: string(),
-	elo: number(),
-	createdAt: string(),
+	bulletElo: number(),
+	rapidElo: number(),
+	blitzElo: number(),
+	createdAt: number(),
 	whiteGames: array(gameSchemaWithoutUsers),
 	blackGames: array(gameSchemaWithoutUsers),
 	wonGames: array(gameSchemaWithoutUsers)

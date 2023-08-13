@@ -19,7 +19,9 @@ const loginMutation = gql`
 			name
 			picture
 			bio
-			elo
+			bulletElo
+			rapidElo
+			blitzElo
 			createdAt
 		}
 	}
