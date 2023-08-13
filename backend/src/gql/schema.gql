@@ -7,9 +7,9 @@ type User {
   blitzElo: Int!
   rapidElo: Int!
   createdAt: String!
-  whiteGames: [GameWithoutPlayers]!
-  blackGames: [GameWithoutPlayers]!
-  wonGames: [GameWithoutPlayers]!
+  whiteGames: [Game]!
+  blackGames: [Game]!
+  wonGames: [Game]!
 }
 
 type UserWithoutGames {
@@ -55,15 +55,8 @@ type GameWithoutPlayers {
   winnerId: String
 }
 
-type Games {
-  wonGames: [Game]!
-  whiteGames: [Game]!
-  blackGames: [Game]!
-}
-
 type Query {
   user(id: String!): User
-  games(userId: String!): Games
   me: User
 }
 

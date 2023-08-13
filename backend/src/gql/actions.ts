@@ -2,8 +2,8 @@ import { parseCookie } from "../utils/cookie.js"
 import { verify } from "../auth/jwt.js"
 import { Context } from "./index.js"
 
-export const userAction = (
-  callback: (user: { id: string }, arg: any, ctx: Context) => any,
+export const userAction = <T>(
+  callback: (user: { id: string }, arg: any, ctx: Context) => T | Promise<T>,
 ) => {
   return async (_: any, arg: any, ctx: Context) => {
     const cookie = parseCookie(ctx.req.headers.cookie)
@@ -15,8 +15,7 @@ export const userAction = (
     return await callback(user, arg, ctx)
   }
 }
-
 export const publicAction =
-  (callback: (arg: any, ctx: Context) => any) =>
+  <T>(callback: (arg: any, ctx: Context) => T) =>
   async (_: any, arg: any, ctx: Context) =>
     await callback(arg, ctx)

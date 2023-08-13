@@ -33,7 +33,6 @@ const resolvers: Resolvers = {
   Query: {
     me,
     user,
-    games,
   },
   Mutation: {
     login,
