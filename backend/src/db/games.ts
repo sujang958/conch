@@ -48,6 +48,25 @@ export const getNewElo = async ({
   return { white: newWhiteElo, black: newBlackElo }
 }
 
+/**
+ *
+ * @param time in seconds
+ * @returns
+ */
+export const getTimeKind = (time: number) => {
+  if (time < 180) return "BULLET"
+  else if (time >= 180 && time < 60 * 10) return "BLITZ"
+  else return "RAPID"
+}
+
+export type TimeKind = ReturnType<typeof getTimeKind>
+
+export const getEloPropertyName = (timeKind: TimeKind) => {
+  if (timeKind === "BULLET") return "bulletElo"
+  else if (timeKind === "BLITZ") return "blitzElo"
+  else return "rapidElo"
+}
+
 export const createGame = async ({
   players,
   time,
@@ -91,12 +110,14 @@ export const createGame = async ({
 
   const timeInMS = time * 1000
   const incrementInMS = increment * 1000
+  const timeKind = getTimeKind(time)
+  const eloPropertyName = getEloPropertyName(timeKind)
 
   await Promise.all([
     redisClient.hset(`${gameId}:players`, {
       ...coloredPlayers,
-      whiteElo: white.elo,
-      blackElo: black.elo,
+      whiteElo: white[eloPropertyName],
+      blackElo: black[eloPropertyName],
     }),
     redisClient.set(`${gameId}:fen`, board.fen()),
     redisClient.set(`${gameId}:pgn`, board.pgn()),
@@ -153,19 +174,23 @@ export const deleteFromRedisMoveToPostgres = async ({
 
   redisClient.del(...keys)
 
+  const time = Number(gameInfo.time)
+  const timeKind = getTimeKind(time)
+  const eloPropertyName = getEloPropertyName(timeKind)
+
   const [_, __, game] = await prisma.$transaction([
     prisma.user.update({
       where: { id: players.white },
-      data: { elo: newElo.white },
+      data: { [eloPropertyName]: newElo.white },
     }),
     prisma.user.update({
       where: { id: players.black },
-      data: { elo: newElo.black },
+      data: { [eloPropertyName]: newElo.black },
     }),
     prisma.game.create({
       data: {
         increment: Number(gameInfo.increment),
-        time: Number(gameInfo.time),
+        time,
         reason,
         createdAt: new Date(Number(gameInfo.createdAt)),
         pgn,
@@ -284,10 +309,10 @@ export const sendGameEndEvent = async ({
           ...rawEventRes,
           you: getVictoryStatus(
             id == players.black ? "black" : "white",
-            winner
+            winner,
           ),
-        } satisfies EventRes)
-      )
+        } satisfies EventRes),
+      ),
     )
   households.forEach(({ socket }) => socket.send(eventRes))
 }

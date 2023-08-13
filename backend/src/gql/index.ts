@@ -79,7 +79,7 @@ const setupGraphQL = async (fastify: FastifyInstance) => {
 
   await apollo.start()
 
-  await fastify.register(fastifyApollo(apollo), { context })
+  await fastify.register(fastifyApollo(apollo), { context, path: "/graphql" })
 }
 
 export default setupGraphQL
