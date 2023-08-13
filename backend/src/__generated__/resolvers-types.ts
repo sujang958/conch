@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import { Context } from '../gql/index.js';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -15,44 +15,45 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: any; output: any; }
 };
 
 export type Game = {
   __typename?: 'Game';
-  black: UserWithoutGames;
   blackId: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
-  endedAt: Scalars['Int']['output'];
+  createdAt: Scalars['Date']['output'];
+  endedAt: Scalars['Date']['output'];
   id: Scalars['String']['output'];
   increment: Scalars['Int']['output'];
   pgn: Scalars['String']['output'];
   reason: Scalars['String']['output'];
   time: Scalars['Int']['output'];
-  white: UserWithoutGames;
   whiteId: Scalars['String']['output'];
-  winner?: Maybe<UserWithoutGames>;
   winnerId?: Maybe<Scalars['String']['output']>;
 };
 
-export type GameWithoutPlayers = {
-  __typename?: 'GameWithoutPlayers';
+export type GameWithUsers = Game & {
+  __typename?: 'GameWithUsers';
+  black: User;
   blackId: Scalars['String']['output'];
-  createdAt: Scalars['String']['output'];
-  endedAt: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  endedAt: Scalars['Date']['output'];
   id: Scalars['String']['output'];
   increment: Scalars['Int']['output'];
   pgn: Scalars['String']['output'];
   reason: Scalars['String']['output'];
   time: Scalars['Int']['output'];
+  white: User;
   whiteId: Scalars['String']['output'];
+  winner?: Maybe<User>;
   winnerId?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  changeBio?: Maybe<User>;
-  changeName?: Maybe<User>;
-  login?: Maybe<User>;
+  changeBio?: Maybe<UserWithGamesWithUsers>;
+  changeName?: Maybe<UserWithGamesWithUsers>;
+  login?: Maybe<UserWithGamesWithUsers>;
   logout?: Maybe<Scalars['Boolean']['output']>;
 };
 
@@ -73,8 +74,8 @@ export type MutationLoginArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  me?: Maybe<User>;
-  user?: Maybe<User>;
+  me?: Maybe<UserWithGamesWithUsers>;
+  user?: Maybe<UserWithGamesWithUsers>;
 };
 
 
@@ -85,28 +86,34 @@ export type QueryUserArgs = {
 export type User = {
   __typename?: 'User';
   bio: Scalars['String']['output'];
-  blackGames: Array<Maybe<Game>>;
   blitzElo: Scalars['Int']['output'];
   bulletElo: Scalars['Int']['output'];
-  createdAt: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  email: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  name?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
   picture: Scalars['String']['output'];
   rapidElo: Scalars['Int']['output'];
-  whiteGames: Array<Maybe<Game>>;
-  wonGames: Array<Maybe<Game>>;
+  updatedAt: Scalars['Date']['output'];
 };
 
-export type UserWithoutGames = {
-  __typename?: 'UserWithoutGames';
+export type UserWithGamesWithUsers = User & {
+  __typename?: 'UserWithGamesWithUsers';
   bio: Scalars['String']['output'];
+  blackGames: Array<Maybe<GameWithUsers>>;
   blitzElo: Scalars['Int']['output'];
   bulletElo: Scalars['Int']['output'];
-  createdAt: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  createdAt: Scalars['Date']['output'];
+  email: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  name?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
   picture: Scalars['String']['output'];
   rapidElo: Scalars['Int']['output'];
+  updatedAt: Scalars['Date']['output'];
+  whiteGames: Array<Maybe<GameWithUsers>>;
+  wonGames: Array<Maybe<GameWithUsers>>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -182,105 +189,118 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Game: ResolverTypeWrapper<Game>;
-  GameWithoutPlayers: ResolverTypeWrapper<GameWithoutPlayers>;
+  GameWithUsers: ResolverTypeWrapper<GameWithUsers>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   User: ResolverTypeWrapper<User>;
-  UserWithoutGames: ResolverTypeWrapper<UserWithoutGames>;
+  UserWithGamesWithUsers: ResolverTypeWrapper<UserWithGamesWithUsers>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
+  Date: Scalars['Date']['output'];
   Game: Game;
-  GameWithoutPlayers: GameWithoutPlayers;
+  GameWithUsers: GameWithUsers;
   Int: Scalars['Int']['output'];
   Mutation: {};
   Query: {};
   String: Scalars['String']['output'];
   User: User;
-  UserWithoutGames: UserWithoutGames;
+  UserWithGamesWithUsers: UserWithGamesWithUsers;
 }>;
 
+export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
+  name: 'Date';
+}
+
 export type GameResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Game'] = ResolversParentTypes['Game']> = ResolversObject<{
-  black?: Resolver<ResolversTypes['UserWithoutGames'], ParentType, ContextType>;
   blackId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  endedAt?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  endedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   increment?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   pgn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   reason?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  white?: Resolver<ResolversTypes['UserWithoutGames'], ParentType, ContextType>;
   whiteId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  winner?: Resolver<Maybe<ResolversTypes['UserWithoutGames']>, ParentType, ContextType>;
   winnerId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type GameWithoutPlayersResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GameWithoutPlayers'] = ResolversParentTypes['GameWithoutPlayers']> = ResolversObject<{
+export type GameWithUsersResolvers<ContextType = Context, ParentType extends ResolversParentTypes['GameWithUsers'] = ResolversParentTypes['GameWithUsers']> = ResolversObject<{
+  black?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   blackId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  endedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  endedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   increment?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   pgn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   reason?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   time?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  white?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   whiteId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  winner?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   winnerId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  changeBio?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationChangeBioArgs, 'bio'>>;
-  changeName?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationChangeNameArgs, 'name'>>;
-  login?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'idToken'>>;
+  changeBio?: Resolver<Maybe<ResolversTypes['UserWithGamesWithUsers']>, ParentType, ContextType, RequireFields<MutationChangeBioArgs, 'bio'>>;
+  changeName?: Resolver<Maybe<ResolversTypes['UserWithGamesWithUsers']>, ParentType, ContextType, RequireFields<MutationChangeNameArgs, 'name'>>;
+  login?: Resolver<Maybe<ResolversTypes['UserWithGamesWithUsers']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'idToken'>>;
   logout?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'id'>>;
+  me?: Resolver<Maybe<ResolversTypes['UserWithGamesWithUsers']>, ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['UserWithGamesWithUsers']>, ParentType, ContextType, RequireFields<QueryUserArgs, 'id'>>;
 }>;
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
   bio?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  blackGames?: Resolver<Array<Maybe<ResolversTypes['Game']>>, ParentType, ContextType>;
   blitzElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   bulletElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  country?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   picture?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   rapidElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  whiteGames?: Resolver<Array<Maybe<ResolversTypes['Game']>>, ParentType, ContextType>;
-  wonGames?: Resolver<Array<Maybe<ResolversTypes['Game']>>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type UserWithoutGamesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserWithoutGames'] = ResolversParentTypes['UserWithoutGames']> = ResolversObject<{
+export type UserWithGamesWithUsersResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserWithGamesWithUsers'] = ResolversParentTypes['UserWithGamesWithUsers']> = ResolversObject<{
   bio?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  blackGames?: Resolver<Array<Maybe<ResolversTypes['GameWithUsers']>>, ParentType, ContextType>;
   blitzElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   bulletElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  country?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   picture?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   rapidElo?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  whiteGames?: Resolver<Array<Maybe<ResolversTypes['GameWithUsers']>>, ParentType, ContextType>;
+  wonGames?: Resolver<Array<Maybe<ResolversTypes['GameWithUsers']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
+  Date?: GraphQLScalarType;
   Game?: GameResolvers<ContextType>;
-  GameWithoutPlayers?: GameWithoutPlayersResolvers<ContextType>;
+  GameWithUsers?: GameWithUsersResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
-  UserWithoutGames?: UserWithoutGamesResolvers<ContextType>;
+  UserWithGamesWithUsers?: UserWithGamesWithUsersResolvers<ContextType>;
 }>;
 

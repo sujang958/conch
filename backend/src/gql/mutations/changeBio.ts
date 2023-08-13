@@ -1,7 +1,8 @@
 import prisma from "../../../prisma/prisma.js"
+import { UserWithGamesWithUsers } from "../../__generated__/resolvers-types.js"
 import { userAction } from "../actions.js"
 
-export const changeBio = userAction(
+export const changeBio = userAction<UserWithGamesWithUsers>(
   async (user, { bio }) =>
     await prisma.user.update({
       where: {
@@ -11,9 +12,9 @@ export const changeBio = userAction(
         bio,
       },
       include: {
-        blackGames: true,
-        whiteGames: true,
-        wonGames: true,
+        blackGames: { include: { black: true, white: true, winner: true } },
+        whiteGames: { include: { black: true, white: true, winner: true } },
+        wonGames: { include: { black: true, white: true, winner: true } },
       },
-    })
+    }),
 )

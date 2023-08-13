@@ -14,9 +14,9 @@ export const changeName = userAction(async (user, { name: _name }) => {
       name,
     },
     include: {
-      blackGames: true,
-      whiteGames: true,
-      wonGames: true,
+      blackGames: { include: { black: true, white: true, winner: true } },
+      whiteGames: { include: { black: true, white: true, winner: true } },
+      wonGames: { include: { black: true, white: true, winner: true } },
     },
   })
 })

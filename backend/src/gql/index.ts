@@ -12,8 +12,7 @@ import fastifyApollo, {
   ApolloFastifyContextFunction,
   fastifyApolloHandler,
 } from "@as-integrations/fastify"
-import { GraphQLResolveInfo } from "graphql"
-import { games } from "./queries/games.js"
+import { GraphQLResolveInfo, GraphQLScalarType, Kind } from "graphql"
 import { user } from "./queries/user.js"
 import { Resolvers } from "../__generated__/resolvers-types.js"
 
@@ -30,6 +29,32 @@ const context: ApolloFastifyContextFunction<Context> = async (req, reply) => ({
 // TODO: change this to auto-importing
 
 const resolvers: Resolvers = {
+  Date: new GraphQLScalarType({
+    name: "Date",
+    description: "Date custom scalar type",
+    parseValue(value) {
+      if (
+        typeof value == "string" ||
+        typeof value == "number" ||
+        value instanceof Date
+      )
+        return new Date(value)
+    },
+    serialize(value) {
+      let date = new Date()
+      if (typeof value == "string" || typeof value == "number")
+        date = new Date(value)
+      else if (value instanceof Date) date = date
+
+      return date.getTime() // value sent to the client
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.INT || ast.kind === Kind.STRING) {
+        return new Date(ast.value) // ast value is always in string format
+      }
+      return null
+    },
+  }),
   Query: {
     me,
     user,

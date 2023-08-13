@@ -5,7 +5,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-esm src/app.ts",
+    "dev": "yarn generate && ts-node-esm src/app.ts",
+    "generate": "yarn generate:db && yarn generate:gql",
     "generate:gql": "graphql-codegen --config codegen.yml",
     "generate:db": "prisma generate"
   },

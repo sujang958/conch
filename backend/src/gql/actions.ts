@@ -3,7 +3,7 @@ import { verify } from "../auth/jwt.js"
 import { Context } from "./index.js"
 
 export const userAction = <T>(
-  callback: (user: { id: string }, arg: any, ctx: Context) => T | Promise<T>,
+  callback: (user: { id: string }, arg: any, ctx: Context) => Promise<T | null>,
 ) => {
   return async (_: any, arg: any, ctx: Context) => {
     const cookie = parseCookie(ctx.req.headers.cookie)
@@ -16,6 +16,6 @@ export const userAction = <T>(
   }
 }
 export const publicAction =
-  <T>(callback: (arg: any, ctx: Context) => T) =>
+  <T>(callback: (arg: any, ctx: Context) => Promise<T | null>) =>
   async (_: any, arg: any, ctx: Context) =>
     await callback(arg, ctx)

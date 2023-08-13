@@ -1,68 +1,76 @@
+scalar Date
+
 type User {
   id: String!
-  name: String
   picture: String!
   bio: String!
   bulletElo: Int!
   blitzElo: Int!
   rapidElo: Int!
-  createdAt: String!
-  whiteGames: [Game]!
-  blackGames: [Game]!
-  wonGames: [Game]!
+  country: String!
+  createdAt: Date!
+  updatedAt: Date!
+  name: String!
+  email: String!
 }
 
-type UserWithoutGames {
+type UserWithGamesWithUsers implements User {
   id: String!
-  name: String
   picture: String!
   bio: String!
   bulletElo: Int!
   blitzElo: Int!
   rapidElo: Int!
-  createdAt: String!
+  country: String!
+  createdAt: Date!
+  updatedAt: Date!
+  name: String!
+  email: String!
+  whiteGames: [GameWithUsers]!
+  blackGames: [GameWithUsers]!
+  wonGames: [GameWithUsers]!
 }
 
 type Game {
   id: String!
-  pgn: String!
-  reason: String!
-  time: Int!
   increment: Int!
-  endedAt: Int!
-  createdAt: String!
+  pgn: String!
+  time: Int!
+  endedAt: Date!
+  createdAt: Date!
+  reason: String!
 
-  white: UserWithoutGames!
-  black: UserWithoutGames!
   whiteId: String!
   blackId: String!
-
-  winner: UserWithoutGames
   winnerId: String
 }
 
-type GameWithoutPlayers {
+type GameWithUsers implements Game {
   id: String!
-  pgn: String!
-  reason: String!
-  time: Int!
   increment: Int!
-  endedAt: String!
-  createdAt: String!
+  pgn: String!
+  time: Int!
+  endedAt: Date!
+  createdAt: Date!
+  reason: String!
 
   whiteId: String!
   blackId: String!
   winnerId: String
+
+  white: User!
+  black: User!
+  winner: User
 }
 
 type Query {
-  user(id: String!): User
-  me: User
+  user(id: String!): UserWithGamesWithUsers
+  me: UserWithGamesWithUsers
 }
 
 type Mutation {
-  login(idToken: String!): User
+  login(idToken: String!): UserWithGamesWithUsers
   logout: Boolean
-  changeName(name: String!): User
-  changeBio(bio: String!): User
+  changeName(name: String!): UserWithGamesWithUsers
+  changeBio(bio: String!): UserWithGamesWithUsers
 }

@@ -1,8 +1,10 @@
 import prisma from "../../../prisma/prisma.js"
-import { User } from "../../__generated__/resolvers-types.js"
+import {
+  UserWithGamesWithUsers,
+} from "../../__generated__/resolvers-types.js"
 import { userAction } from "../actions.js"
 
-export const me = userAction<User | null>(async (user, _) => {
+export const me = userAction<UserWithGamesWithUsers>(async (user, _) => {
   const fetched = await prisma.user.findUnique({
     where: { id: user.id },
     include: {
@@ -14,5 +16,5 @@ export const me = userAction<User | null>(async (user, _) => {
 
   if (!fetched) return null
 
-  return JSON.parse(JSON.stringify(fetched))
+  return fetched
 })
