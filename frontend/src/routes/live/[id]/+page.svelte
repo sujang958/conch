@@ -1,9 +1,13 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { page } from "$app/stores"
+	import { PUBLIC_WS_URL } from "$env/static/public"
+	import { getTimeKind } from "$lib/board"
 	import Board from "$lib/components/Board.svelte"
+	import GameOverModal from "$lib/components/GameOverModal.svelte"
 	import PlayerCard from "$lib/components/PlayerCard.svelte"
 	import { user } from "$lib/stores/user"
+	import { joinNewGame } from "$lib/ws"
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"
 	import toast from "svelte-french-toast"
@@ -48,6 +52,7 @@
 
 	let ws: WebSocket
 	let myColor: "white" | "black" = "white"
+	let isInGamePlayer = false
 
 	let gameEnded: boolean = false
 	let endReason: string | null = null
@@ -63,7 +68,7 @@
 	let lastMovedTime = -1
 	let players = { black: "", white: "" }
 
-	// TODO: add supports for spectators
+	let info: Record<string, number> = {}
 
 	const onWSOpen = () => {
 		ws.send(
@@ -88,13 +93,11 @@
 				break
 			case "BOARD":
 				game.load(event.fen)
-				// game.loadPgn(event.pgn)
 
-				players = event.players
+				info = event.info
+				players = { ...event.players }
 				time = { white: event.time.white, black: event.time.black }
 				lastMovedTime = event.time.lastMovedTime
-
-				console.log(time)
 
 				const turnFullname = game.turn() == "w" ? "white" : "black"
 				time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
@@ -104,7 +107,10 @@
 				const san = game.history().at(-1)
 				playSoundByMove(san ?? "")
 
-				if (event?.for) myColor = event.for
+				if (event?.for) {
+					myColor = event.for
+					isInGamePlayer = true
+				}
 
 				board = game.board()
 				history = game.history()
@@ -171,9 +177,11 @@
 	})
 
 	onDestroy(() => {
-		ws.removeEventListener("message", onWSMessage)
-		ws.removeEventListener("open", onWSOpen)
-		ws.removeEventListener("close", onWSClose)
+		if (ws) {
+			ws.removeEventListener("message", onWSMessage)
+			ws.removeEventListener("open", onWSOpen)
+			ws.removeEventListener("close", onWSClose)
+		}
 		clearInterval(timer)
 	})
 
@@ -205,40 +213,39 @@
 			Number(formattedSeconds) < 10 ? `0${formattedSeconds}` : formattedSeconds
 		}`
 	}
+
+	const lookForNewGame = async ({ time, increment }: { time: number; increment: number }) => {
+		const gameId = await joinNewGame({
+			time,
+			increment
+		})
+
+		location.replace(`/live/${gameId}`)
+
+		// TODO: change this to goto and initialize all state to get a better UX
+	}
 </script>
 
-{#if gameEnded && newElo}
-	<div class="grid place-items-center fixed inset-0 h-screen z-50 text-black">
-		<div class="rounded-lg bg-neutral-50 py-5 px-6 flex flex-col items-center">
-			<p class="text-3xl font-bold">{won != null ? (won ? "Won" : "Lost") : "Draw"}</p>
-			<p class="text-base">by {endReason ?? "unknown issues"}</p>
-			<div class="py-8 flex flex-col items-center">
-				<p class="text-4xl font-bold">{newElo.now}</p>
-				<p
-					class="text-base -mt-1 {newElo.change >= 0
-						? 'text-green-600 before:content-["+"]'
-						: 'text-red-400'}"
-				>
-					{newElo.change}
-				</p>
-			</div>
-			<div class="py-2" />
-			<div class="flex flex-row items-center justify-between gap-x-2.5">
-				<button
-					type="button"
-					class="bg-neutral-950 text-white font-semibold text-sm rounded-lg px-4 py-2"
-					>New game</button
-				>
-				<!-- TODO: implement "New Game" button -->
-				<button
-					type="button"
-					on:click={() => goto("/")}
-					class="bg-neutral-200 text-black font-semibold text-sm rounded-lg px-4 py-2"
-					>Go lobby</button
-				>
-			</div>
-		</div>
-	</div>
+{#if gameEnded}
+	<GameOverModal
+		outcome={won != null ? (won ? "Won" : "Lost") : "Draw"}
+		reason={endReason}
+		{newElo}
+	>
+		{#if isInGamePlayer}
+			<button
+				type="button"
+				on:click={() =>
+					toast.promise(lookForNewGame({ time: info.time, increment: info.increment }), {
+						error: (e) => e,
+						loading: "Looking for the opponent",
+						success: "Match Found"
+					})}
+				class="bg-neutral-950 text-white font-semibold text-sm rounded-lg px-4 py-2"
+				>New game</button
+			>
+		{/if}
+	</GameOverModal>
 {/if}
 
 <main
@@ -255,10 +262,13 @@
 		}}
 	/>
 
-	{#if $user && typeof $user !== "string" && myColor}
-		<div class="flex flex-col w-1/6 gap-y-4">
+	<div class="flex flex-col w-1/6 gap-y-4">
+		{#if players[myColor] && "time" in info}
 			<section class="bg-neutral-900 rounded-xl p-4 flex flex-col justify-between h-96">
-				<PlayerCard userId={players[myColor == "white" ? "black" : "white"]}>
+				<PlayerCard
+					userId={players[myColor == "white" ? "black" : "white"]}
+					displayingElo={getTimeKind(info.time)}
+				>
 					<div class="rounded-lg py-1 px-2.5 font-bold bg-white text-black">
 						{convertToMMSS(time[myColor == "white" ? "black" : "white"])}
 					</div>
@@ -270,7 +280,7 @@
 					{/each}
 				</div>
 
-				<PlayerCard userId={$user.id}>
+				<PlayerCard userId={players[myColor]} displayingElo={getTimeKind(info.time)}>
 					<div
 						class="rounded-lg py-1 px-2.5 font-bold bg-white text-black {game.turn() ==
 						(myColor == 'white' ? 'w' : 'b')
@@ -281,7 +291,9 @@
 					</div>
 				</PlayerCard>
 			</section>
+		{/if}
 
+		{#if isInGamePlayer}
 			<section
 				class="flex flex-row items-center justify-evenly rounded-lg bg-neutral-900 relative p-2 gap-x-3"
 			>
@@ -343,8 +355,8 @@
 					>
 				</div>
 			</section>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </main>
 
 By &lt;a href=&quot;//commons.wikimedia.org/wiki/User:Cburnett&quot;

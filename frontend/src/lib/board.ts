@@ -22,3 +22,9 @@ export const getSquare = (element?: any) => {
 const game = new Chess()
 
 export type Move = Exclude<Parameters<typeof game.move>[0], string>
+
+export const getTimeKind = (time: number) => {
+	if (time < 180) return "bullet"
+	else if (time >= 180 && time < 60 * 10) return "blitz"
+	else return "rapid"
+}

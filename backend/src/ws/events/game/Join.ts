@@ -3,6 +3,7 @@ import { EventFile, EventRes } from "../../../types/events.js"
 import { redisClient } from "../../../db/redis.js"
 import { gameHouseholds } from "../rooms.js"
 import { getOrCreate } from "../../../utils/map.js"
+import { propertyToNumber } from "../../../utils/object.js"
 
 const joinEventParam = z.object({
   gameId: z.string(),
@@ -24,14 +25,15 @@ const JoinEvent: EventFile = {
     )
       return
 
-    const [pgn, fen, time, players] = await Promise.all([
+    const [pgn, fen, time, players, info] = await Promise.all([
       await redisClient.get(`${gameId}:pgn`),
       await redisClient.get(`${gameId}:fen`),
       await redisClient.hgetall(`${gameId}:time`),
       await redisClient.hgetall(`${gameId}:players`),
+      await redisClient.hgetall(`${gameId}:info`),
     ])
 
-    if (pgn == null || !fen || !time) {
+    if (pgn == null || !fen || !time || !info) {
       socket.send(JSON.stringify({ type: "NOT_FOUND" } satisfies EventRes))
       socket.close()
 
@@ -48,9 +50,8 @@ const JoinEvent: EventFile = {
       pgn,
       fen,
       players,
-      time: Object.fromEntries(
-        Object.entries(time).map(([name, value]) => [name, Number(value)]),
-      ),
+      info: propertyToNumber(info),
+      time: propertyToNumber(time),
       ...(user && players.white == user.id && { for: "white" }),
       ...(user && players.black == user.id && { for: "black" }),
     } satisfies EventRes)

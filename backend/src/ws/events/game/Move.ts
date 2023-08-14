@@ -10,6 +10,7 @@ import {
   isTimeoutVSInsufficientMaterial,
   sendGameEndEvent,
 } from "../../../db/games.js"
+import { propertyToNumber } from "../../../utils/object.js"
 
 const moveEventParam = z.object({
   gameId: z.string(),
@@ -96,14 +97,16 @@ const MoveEvent: EventFile = {
 
       if (households.length < 1) return
 
+      const [newTime, info] = await Promise.all([
+        await redisClient.hgetall(`${gameId}:time`),
+        await redisClient.hgetall(`${gameId}:info`),
+      ])
+
       const res = JSON.stringify({
         type: "BOARD",
         gameId: gameId,
-        time: Object.fromEntries(
-          Object.entries(await redisClient.hgetall(`${gameId}:time`)).map(
-            ([name, value]) => [name, Number(value)],
-          ),
-        ),
+        time: propertyToNumber(newTime),
+        info: propertyToNumber(info),
         pgn: newPgn,
         fen: newFen,
         players,

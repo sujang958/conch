@@ -1,9 +1,9 @@
+import { PUBLIC_GRAPHQL_URL } from "$env/static/public"
 import { userSchemaWithoutGames } from "$lib/stores/user"
 import { GraphQLClient, gql } from "graphql-request"
 import { parse } from "valibot"
 
-// TODO: use env var
-export const graphQLClient = new GraphQLClient("http://localhost:3000/graphql", {
+export const graphQLClient = new GraphQLClient(PUBLIC_GRAPHQL_URL, {
 	// method: ``,
 	jsonSerializer: {
 		parse: JSON.parse,

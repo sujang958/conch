@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { gql } from "graphql-request"
 	import { graphQLClient } from "../utils/graphql"
-	import { number, object, parse, string, type Output } from "valibot"
+	import { number, object, parse, string, type Output, safeParse } from "valibot"
+	import toast from "svelte-french-toast"
 
 	export let userId = ""
+	export let displayingElo: "blitz" | "rapid" | "bullet" = "blitz"
 
 	const partialUserSchema = object({
 		name: string(),
@@ -32,7 +34,10 @@
 		if (typeof res !== "object") return
 		if (!("user" in res)) return // TODO: show some error typa shits
 
-		user = parse(partialUserSchema, res.user)
+		const parsedRes = safeParse(partialUserSchema, res.user)
+		if (!parsedRes.success) return toast.error("Error while fetching the user")
+
+		user = parsedRes.data
 	})
 </script>
 
@@ -47,7 +52,7 @@
 			/>
 			<p class="font-medium text-lg">
 				{user.name} &nbsp;<span class="text-neutral-400 text-xs"
-					>({Math.max(user.bulletElo, user.blitzElo, user.rapidElo)})</span
+					>({user[`${displayingElo}Elo`]})</span
 				>
 			</p>
 		</div>

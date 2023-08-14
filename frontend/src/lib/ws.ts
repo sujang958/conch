@@ -1,9 +1,24 @@
-import { writable } from "svelte/store"
+import { PUBLIC_WS_URL } from "$env/static/public"
 
-export const lobbySocketRes = writable<null | string>(null)
+export const joinNewGame = ({
+	time,
+	increment
+}: {
+	time: number
+	increment: number
+}): Promise<string> =>
+	new Promise((resolve, reject) => {
+		const ws = new WebSocket(`${PUBLIC_WS_URL}/lobby`)
 
-export const lobbySocket = new WebSocket("ws://localhost:3000/lobby")
+		ws.addEventListener("message", (res) => {
+			const event = JSON.parse(String(res.data))
 
-lobbySocket.addEventListener("message", (event) => {
-	lobbySocketRes.update(event.data)
-})
+			if (event.type !== "JOIN_GAME") return
+
+			resolve(String(event.gameId))
+		})
+
+		ws.addEventListener("open", () => [ws.send(`JOIN_GAME ${JSON.stringify({ time, increment })}`)])
+
+		ws.addEventListener("close", () => reject("Disconnected from the server"))
+	})
