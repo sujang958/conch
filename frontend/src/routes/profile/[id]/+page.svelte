@@ -5,7 +5,7 @@
 	import { gql } from "graphql-request"
 	import { parse } from "graphql"
 	import type { TypedDocumentNode } from "@graphql-typed-document-node/core"
-	import { array, merge, object, omit, pick, type Output, string } from "valibot"
+	import { array, merge, object, pick, type Output, string, nullish } from "valibot"
 	import { gameSchema, userSchema } from "$lib/stores/user"
 
 	const nameObject = object({
@@ -17,7 +17,7 @@
 		object({
 			white: nameObject,
 			black: nameObject,
-			winner: nameObject
+			winner: nullish(nameObject)
 		})
 	])
 
@@ -34,10 +34,10 @@
 			"name",
 			"picture",
 			"createdAt",
-			"bio",
 			"bulletElo",
 			"rapidElo",
 			"blitzElo",
+			"bio",
 			"wonGames",
 			"blackGames",
 			"whiteGames"
