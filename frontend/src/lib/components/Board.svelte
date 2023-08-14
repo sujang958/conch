@@ -147,6 +147,8 @@
 			history = [...game.history()]
 			move.promotion = undefined
 
+			if (move.from !== move.to) clickedPiece = null
+
 			afterMove()
 		}
 	}
