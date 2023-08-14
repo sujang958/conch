@@ -65,75 +65,79 @@
 
 	// TODO: add supports for spectators
 
+	const onWSOpen = () => {
+		ws.send(
+			`JOIN ${JSON.stringify({
+				gameId
+			})}`
+		)
+	}
+
+	const onWSClose = () => {
+		toast.error("Disconnected from the server!")
+	}
+
+	const onWSMessage = async (message: MessageEvent<any>) => {
+		const event = JSON.parse(message.data)
+
+		console.log(event)
+
+		switch (event.type) {
+			case "NOT_FOUND":
+				toast.error("Game not found", { duration: 10_000 })
+				break
+			case "BOARD":
+				game.load(event.fen)
+				// game.loadPgn(event.pgn)
+
+				players = event.players
+				time = { white: event.time.white, black: event.time.black }
+				lastMovedTime = event.time.lastMovedTime
+
+				console.log(time)
+
+				const turnFullname = game.turn() == "w" ? "white" : "black"
+				time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
+
+				if (!boardInitialized) boardInitialized = true
+
+				const san = game.history().at(-1)
+				playSoundByMove(san ?? "")
+
+				if (event?.for) myColor = event.for
+
+				board = game.board()
+				history = game.history()
+				break
+			case "GAME_END":
+				playSound(endAudio)
+				if (event?.you) won = event.you !== "DRAW" ? event.you == "WON" : null
+				endReason = event.reason
+				newElo = event.newElo[myColor]
+				gameEnded = true
+				break
+			case "DRAW_REQUESTED":
+				confirmMessage = "Your opponent requested a draw"
+				confirmDescription = "Do you accept it?"
+				confirmFunction = () => {
+					ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: true })}`)
+				}
+				notConfirmFunction = () => {
+					ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: false })}`)
+				}
+				confirmWindowShown = true
+				break
+			default:
+				break
+		}
+	}
+
 	onMount(() => {
 		ws = new WebSocket("ws://localhost:3000/ws/game")
 
-		ws.addEventListener("message", async (message) => {
-			const event = JSON.parse(message.data)
-
-			console.log(event)
-
-			switch (event.type) {
-				case "NOT_FOUND":
-					toast.error("Game not found", { duration: 10_000 })
-					break
-				case "BOARD":
-					game.load(event.fen)
-					// game.loadPgn(event.pgn)
-
-					players = event.players
-					time = { white: event.time.white, black: event.time.black }
-					lastMovedTime = event.time.lastMovedTime
-
-					console.log(time)
-
-					const turnFullname = game.turn() == "w" ? "white" : "black"
-					time = { ...time, [turnFullname]: time[turnFullname] - (Date.now() - lastMovedTime) }
-
-					if (!boardInitialized) boardInitialized = true
-
-					const san = game.history().at(-1)
-					playSoundByMove(san ?? "")
-
-					if (event?.for) myColor = event.for
-
-					board = game.board()
-					history = game.history()
-					break
-				case "GAME_END":
-					playSound(endAudio)
-					if (event?.you) won = event.you !== "DRAW" ? event.you == "WON" : null
-					endReason = event.reason
-					newElo = event.newElo[myColor]
-					gameEnded = true
-					break
-				case "DRAW_REQUESTED":
-					confirmMessage = "Your opponent requested a draw"
-					confirmDescription = "Do you accept it?"
-					confirmFunction = () => {
-						ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: true })}`)
-					}
-					notConfirmFunction = () => {
-						ws.send(`DRAW_RESPONSE ${JSON.stringify({ gameId, accepted: false })}`)
-					}
-					confirmWindowShown = true
-					break
-				default:
-					break
-			}
-		})
-
-		ws.addEventListener("open", () => {
-			ws.send(
-				`JOIN ${JSON.stringify({
-					gameId
-				})}`
-			)
-		})
-
-		ws.addEventListener("close", () => {
-			toast.error("Disconnected from the server!")
-		})
+		ws.addEventListener("message", onWSMessage)
+		ws.addEventListener("open", onWSOpen)
+		ws.addEventListener("close", onWSClose)
 	})
 
 	let timer: NodeJS.Timer
@@ -167,10 +171,11 @@
 	})
 
 	onDestroy(() => {
+		ws.removeEventListener("message", onWSMessage)
+		ws.removeEventListener("open", onWSOpen)
+		ws.removeEventListener("close", onWSClose)
 		clearInterval(timer)
 	})
-
-	// TODO: add removeEventLIstener socket
 
 	const movePiece = (): boolean => {
 		try {

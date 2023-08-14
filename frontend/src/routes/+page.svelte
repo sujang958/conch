@@ -2,19 +2,16 @@
 	import { goto } from "$app/navigation"
 	import Board from "$lib/components/Board.svelte"
 	import PlayerCard from "$lib/components/PlayerCard.svelte"
-	import { auth } from "$lib/auth/firebase"
 	import { logout, user } from "$lib/stores/user"
-	import { graphQLClient } from "$lib/utils/graphql"
 	import { Chess } from "chess.js"
-	import { gql } from "graphql-request"
 	import { onMount } from "svelte"
 	import toast from "svelte-french-toast"
+	import { PUBLIC_WS_URL } from "$env/static/public"
 
 	let ws: WebSocket
 
 	onMount(() => {
-		ws = new WebSocket("ws://localhost:3000/ws/lobby") // TODO: change to env
-
+		ws = new WebSocket(`${PUBLIC_WS_URL}/lobby`)
 		ws.addEventListener("message", ({ data }) => {
 			const event = JSON.parse(data)
 
