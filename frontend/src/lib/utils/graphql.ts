@@ -1,6 +1,6 @@
-import { userSchema, userSchemaWithoutGames } from "$lib/stores/user"
+import { userSchemaWithoutGames } from "$lib/stores/user"
 import { GraphQLClient, gql } from "graphql-request"
-import { omit, parse } from "valibot"
+import { parse } from "valibot"
 
 // TODO: use env var
 export const graphQLClient = new GraphQLClient("http://localhost:3000/graphql", {
@@ -23,6 +23,7 @@ const loginMutation = gql`
 			rapidElo
 			blitzElo
 			createdAt
+			country
 		}
 	}
 `

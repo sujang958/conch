@@ -27,6 +27,7 @@ export const userSchema = object({
 	rapidElo: number(),
 	blitzElo: number(),
 	createdAt: number(),
+	country: string(),
 	whiteGames: array(gameSchemaWithoutUsers),
 	blackGames: array(gameSchemaWithoutUsers),
 	wonGames: array(gameSchemaWithoutUsers)

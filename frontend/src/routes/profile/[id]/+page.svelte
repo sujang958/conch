@@ -41,6 +41,7 @@
 		[
 			"id",
 			"name",
+			"country",
 			"picture",
 			"createdAt",
 			"bulletElo",
@@ -61,6 +62,7 @@
 				id
 				name
 				picture
+				country
 				createdAt
 				bulletElo
 				rapidElo
@@ -198,11 +200,13 @@
 				</svg>
 			</a>
 			<div class="py-10" />
-			<img src="/popcat-with-bg.jpg" alt="pfp" class="rounded-2xl object-contain w-36 h-36" />
+			<img src={user.picture} alt="pfp" class="rounded-2xl object-contain w-36 h-36" />
 			<div class="py-4" />
 			<div class="flex flex-row items-stretch justify-between">
 				<section class="flex flex-col justify-between">
-					<p class="text-3xl font-semibold">{user.name} <span class="text-xl">🇰🇷</span></p>
+					<p class="text-3xl font-semibold">
+						{user.name} <span class="text-xl">{user.country}</span>
+					</p>
 					<p class="text-sm mt-3 text-neutral-400">{new Date(user.createdAt).toDateString()}</p>
 					<p class="text-xl mt-6">{user.bio}</p>
 				</section>

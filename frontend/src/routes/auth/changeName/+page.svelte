@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { auth } from "$lib/auth/firebase"
-	import { user, userSchema, type UserType } from "$lib/stores/user"
+	import { user, userSchema, userSchemaWithoutGames, type UserType } from "$lib/stores/user"
 	import { graphQLClient } from "$lib/utils/graphql"
 	import type { TypedDocumentNode } from "@graphql-typed-document-node/core"
 	import { parse, type TypedQueryDocumentNode } from "graphql"
@@ -30,54 +30,18 @@
 					name
 					picture
 					bio
-					elo
+					bulletElo
+					rapidElo
+					blitzElo
 					createdAt
-					whiteGames {
-						id
-						pgn
-						reason
-						time
-						increment
-						endedAt
-						createdAt
-
-						whiteId
-						blackId
-						winnerId
-					}
-					blackGames {
-						id
-						pgn
-						reason
-						time
-						increment
-						endedAt
-						createdAt
-
-						whiteId
-						blackId
-						winnerId
-					}
-					wonGames {
-						id
-						pgn
-						reason
-						time
-						increment
-						endedAt
-						createdAt
-
-						whiteId
-						blackId
-						winnerId
-					}
+					country
 				}
 			}
 		`)
 
 	const changeName = async (name: string) => {
 		const res = await graphQLClient.request(changeNameMutation, { name })
-		const parsed = safeParse(userSchema, res.changeName)
+		const parsed = safeParse(userSchemaWithoutGames, res.changeName)
 
 		if (!parsed.success) throw new Error("An error occured")
 
