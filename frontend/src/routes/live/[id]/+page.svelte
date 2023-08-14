@@ -210,7 +210,9 @@
 		).padStart(2, "0")
 
 		return `${formattedMinutes}:${
-			Number(formattedSeconds) < 10 ? `0${formattedSeconds}` : formattedSeconds
+			Number(formattedSeconds) < 10 && Number(formattedSeconds) > 0
+				? `0${formattedSeconds}`
+				: formattedSeconds
 		}`
 	}
 
