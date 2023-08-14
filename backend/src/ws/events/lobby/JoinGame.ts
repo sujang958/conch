@@ -8,6 +8,7 @@ import {
   getEloPropertyName,
   getTimeKind,
 } from "../../../db/games.js"
+import { search } from "node-emoji"
 
 const joinGameParam = z.object({
   time: z.number({ description: "in seconds" }),
@@ -52,8 +53,8 @@ const JoinGameEvent: EventFile = {
         const queue = await redisClient.lrange(queueId, 0, -1)
         return (
           queue
-            .map((user) => user.trim().split(":"))
-            .findIndex(([userId, _]) => userId == user.id) < 0
+            .map((user) => user.trim().split(":")[0])
+            .findIndex((userId) => userId == user.id) < 0
         )
       }),
     )

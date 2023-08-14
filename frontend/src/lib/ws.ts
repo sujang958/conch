@@ -16,6 +16,8 @@ export const joinNewGame = ({
 			if (event.type !== "JOIN_GAME") return
 
 			resolve(String(event.gameId))
+
+			ws.close()
 		})
 
 		ws.addEventListener("open", () => [ws.send(`JOIN_GAME ${JSON.stringify({ time, increment })}`)])

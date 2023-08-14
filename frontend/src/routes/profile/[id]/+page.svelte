@@ -146,11 +146,7 @@
 
 		const user = userQueryResSchema.parse(res.user)
 
-		const mergedGames = [...user.wonGames, ...user.whiteGames, ...user.blackGames]
-
-		games = mergedGames
-
-		return { ...user }
+		return user
 	}
 
 	let user: Promise<UserQueryRes> = fetchGames($page.params.id)
@@ -161,8 +157,6 @@
 	let selectableCategories: SelectableCategory[] = ["WHITE", "BLACK", "WON"]
 	let selectedCategories: Set<SelectableCategory> = new Set()
 
-	$: games.sort((a, b) => b.createdAt - a.createdAt)
-
 	$: (async () => {
 		const fetchedUser = await user
 		let newGames: GameWithOnlyUsersName[] = []
@@ -170,7 +164,13 @@
 		if (selectedCategories.has("WHITE")) newGames = fetchedUser.whiteGames
 		else if (selectedCategories.has("BLACK")) newGames = [...newGames, ...fetchedUser.blackGames]
 		else if (selectedCategories.has("WON")) newGames = [...newGames, ...fetchedUser.wonGames]
-		else newGames = [...fetchedUser.whiteGames, ...fetchedUser.blackGames, ...fetchedUser.wonGames]
+		else if (selectedCategories.size <= 0)
+			newGames = [...fetchedUser.whiteGames, ...fetchedUser.blackGames, ...fetchedUser.wonGames]
+
+		// TODO: fix being sorted wrongly sometimes
+
+		newGames.sort((a, b) => a.endedAt - b.endedAt)
+		newGames.reverse()
 
 		games = newGames
 	})()

@@ -6,55 +6,16 @@
 	import { Chess } from "chess.js"
 	import { onMount } from "svelte"
 	import toast from "svelte-french-toast"
-	import { PUBLIC_WS_URL } from "$env/static/public"
-
-	let ws: WebSocket
-
-	onMount(() => {
-		ws = new WebSocket(`${PUBLIC_WS_URL}/lobby`)
-		ws.addEventListener("message", ({ data }) => {
-			const event = JSON.parse(data)
-
-			console.log(event)
-		})
-
-		ws.addEventListener("open", () => {})
-	})
+	import { joinNewGame } from "$lib/ws"
 
 	let time = 60 * 20
 	let increment = 1
 
-	const joinQueue = ({ time, increment }: { time: number; increment: number }) =>
-		new Promise((resolve, reject) => {
-			ws.send(
-				`JOIN_GAME ${JSON.stringify({
-					time,
-					increment
-				})}`
-			)
+	const joinQueue = async ({ time, increment }: { time: number; increment: number }) => {
+		const gameId = await joinNewGame({ time, increment })
 
-			ws.addEventListener(
-				"message",
-				({ data }) => {
-					const event = JSON.parse(data)
-
-					switch (event.type) {
-						case "JOIN_GAME":
-							resolve("")
-							setTimeout(() => {
-								goto(`/live/${event.gameId}`)
-							}, 800)
-							break
-						case "ERROR":
-							reject(event.message)
-							break
-						default:
-							break
-					}
-				},
-				{ once: true }
-			)
-		})
+		goto(`/live/${gameId}`)
+	}
 
 	let game = new Chess()
 	let board = game.board()

@@ -164,8 +164,10 @@ export const deleteFromRedisMoveToPostgres = async ({
 
   const gameId = rawGameId.startsWith("game:") ? rawGameId : `game:${rawGameId}`
 
-  const gameInfo = await redisClient.hgetall(`${gameId}:info`)
-  const pgn = await redisClient.get(`${gameId}:pgn`)
+  const [gameInfo, pgn] = await Promise.all([
+    redisClient.hgetall(`${gameId}:info`),
+    redisClient.get(`${gameId}:pgn`),
+  ])
 
   if (pgn == null) return null
 
