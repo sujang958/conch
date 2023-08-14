@@ -6,7 +6,6 @@ import { getOrCreate } from "../utils/map.js"
 import { gameHouseholds } from "../ws/events/rooms.js"
 import { EventRes, GameEndReason } from "../types/events.js"
 import EloRank from "elo-rank"
-import { WebSocket } from "ws"
 
 export const getVictoryStatus = (
   me: "white" | "black",

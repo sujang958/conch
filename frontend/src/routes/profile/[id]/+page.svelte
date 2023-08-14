@@ -8,6 +8,12 @@
 	import { array, merge, object, pick, type Output, string, nullish } from "valibot"
 	import { gameSchema, userSchema } from "$lib/stores/user"
 
+	const getTimeKind = (time: number) => {
+		if (time < 180) return "BULLET"
+		else if (time >= 180 && time < 60 * 10) return "BLITZ"
+		else return "RAPID"
+	}
+
 	const nameObject = object({
 		name: string()
 	})
@@ -21,6 +27,8 @@
 		})
 	])
 
+	type GameWithOnlyUsersName = Output<typeof gameWithOnlyUsersName>
+
 	const userQueryResSchema = pick(
 		merge([
 			userSchema,
@@ -31,6 +39,7 @@
 			})
 		]),
 		[
+			"id",
 			"name",
 			"picture",
 			"createdAt",
@@ -49,6 +58,7 @@
 	const userQuery: TypedDocumentNode<{ user: UserQueryRes }, { userId: string }> = parse(gql`
 		query User($userId: String!) {
 			user(id: $userId) {
+				id
 				name
 				picture
 				createdAt
@@ -132,12 +142,36 @@
 	const fetchGames = async (userId: string) => {
 		const res = await graphQLClient.request(userQuery, { userId })
 
-		console.log(res.user)
+		const user = userQueryResSchema.parse(res.user)
 
-		return userQueryResSchema.parse(res.user)
+		const mergedGames = [...user.wonGames, ...user.whiteGames, ...user.blackGames]
+
+		games = mergedGames
+
+		return { ...user }
 	}
 
 	let user: Promise<UserQueryRes> = fetchGames($page.params.id)
+	let games: GameWithOnlyUsersName[] = []
+
+	type SelectableCategory = "WHITE" | "BLACK" | "WON"
+
+	let selectableCategories: SelectableCategory[] = ["WHITE", "BLACK", "WON"]
+	let selectedCategories: Set<SelectableCategory> = new Set()
+
+	$: games.sort((a, b) => b.createdAt - a.createdAt)
+
+	$: (async () => {
+		const fetchedUser = await user
+		let newGames: GameWithOnlyUsersName[] = []
+
+		if (selectedCategories.has("WHITE")) newGames = fetchedUser.whiteGames
+		else if (selectedCategories.has("BLACK")) newGames = [...newGames, ...fetchedUser.blackGames]
+		else if (selectedCategories.has("WON")) newGames = [...newGames, ...fetchedUser.wonGames]
+		else newGames = [...fetchedUser.whiteGames, ...fetchedUser.blackGames, ...fetchedUser.wonGames]
+
+		games = newGames
+	})()
 </script>
 
 {#await user}
@@ -178,10 +212,10 @@
 						{user.rapidElo} <span class="text-neutral-400">Rapid</span>
 					</p>
 					<p class="text-lg font-semibold">
-						{user.blitzElo} <span class=" text-neutral-400">Blitz</span>
+						{user.blitzElo} <span class="text-neutral-400">Blitz</span>
 					</p>
 					<p class="text-lg font-semibold">
-						{user.bulletElo} <span class=" text-neutral-400">Bullet</span>
+						{user.bulletElo} <span class="text-neutral-400">Bullet</span>
 					</p>
 				</section>
 			</div>
@@ -189,30 +223,42 @@
 				<header
 					class="sticky top-0 w-full py-4 bg-neutral-950 flex flex-row items-center gap-x-2.5 z-10"
 				>
-					<button
+					<!-- <button
 						type="button"
 						class="rounded-xl font-medium text-sm px-3 py-0.5 bg-black text-white border border-neutral-700"
-						>All</button
-					>
-					<button
-						type="button"
-						class="rounded-2xl font-medium text-sm px-3 py-0.5 bg-white text-black">Won</button
-					>
-					<button
-						type="button"
-						class="rounded-2xl font-medium text-sm px-3 py-0.5 bg-white text-black">White</button
-					>
-					<button
-						type="button"
-						class="rounded-2xl font-medium text-sm px-3 py-0.5 bg-white text-black">Black</button
-					>
+						on:click={() => {
+							selectedCategories.add("WHITE").add("BLACK").add("WON")
+							selectedCategories = selectedCategories
+						}}>All</button
+					> -->
+					{#each selectableCategories as category}
+						<button
+							type="button"
+							class="transition duration-200 rounded-xl font-semibold text-sm px-3 py-0.5 border border-neutral-700 {selectedCategories.has(
+								category
+							)
+								? 'text-black bg-white '
+								: 'bg-black text-white font-medium'}"
+							on:click={() => {
+								if (!selectedCategories.delete(category)) selectedCategories.add(category)
+
+								selectedCategories = selectedCategories
+							}}>{category.toLowerCase().replace(/^\w/, (c) => c.toUpperCase())}</button
+						>
+					{/each}
 				</header>
 				<div />
-				<GameCard />
-				<GameCard />
-				<GameCard />
-				<GameCard />
-				<GameCard />
+				{#each games as game}
+					<GameCard
+						game={{
+							blackName: game.black.name,
+							whiteName: game.white.name,
+							reason: game.reason,
+							timeKind: getTimeKind(game.time),
+							outcome: game.winnerId ? (game.winnerId == user.id ? "WON" : "LOST") : "DRAW"
+						}}
+					/>
+				{/each}
 			</div>
 		</section>
 	</main>
