@@ -6,6 +6,7 @@
   "author": "sujang.958 <enter7377@naver.com>",
   "license": "MIT",
   "dependencies": {
+    "chess.js": "^1.0.0-beta.6",
     "turbo": "^1.10.13"
   },
   "private": true,
@@ -18,5 +19,8 @@
     "dev": "turbo dev --parallel",
     "lint": "turbo lint"
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.19",
+  "devDependencies": {
+    "prettier": "2"
+  }
 }
