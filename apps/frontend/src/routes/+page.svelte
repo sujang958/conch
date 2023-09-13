@@ -4,7 +4,6 @@
 	import PlayerCard from "$lib/components/PlayerCard.svelte"
 	import { logout, user } from "$lib/stores/user"
 	import { Chess } from "chess.js"
-	import { onMount } from "svelte"
 	import toast from "svelte-french-toast"
 	import { joinNewGame } from "$lib/ws"
 

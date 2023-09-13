@@ -72,8 +72,14 @@
 
 		// Handling promotions
 		const [alpahbet, number] = targetSquare.id.trim().split("")
-		if (draggingPieceNotation == "P" && Number(number) == 8) {
-			promotionWindow.style.left = `min(${(alpahbet.charCodeAt(0) - 97) * 12.5}%, 75%)`
+		const rank = Number(number)
+		if (draggingPieceNotation == "P" && (rank == 8 || rank == 1)) {
+			const squaresFromBorderToTargetWindow = alpahbet.charCodeAt(0) - 97
+
+			console.log(squaresFromBorderToTargetWindow, rank)
+
+			if (rank == 8) promotionWindow.style.left = `min(${squaresFromBorderToTargetWindow}%, 75%)`
+			else promotionWindow.style.right = `max(${squaresFromBorderToTargetWindow}%, 12.5%)`
 
 			isPromoting = true
 
@@ -194,7 +200,7 @@
 			class="rounded transition duration-100 hover:bg-black/5"
 		>
 			<img
-				src="/pieces/w_q.svg"
+				src="/pieces/{colorFor.charAt(0)}_q.svg"
 				alt="Queen"
 				class="object-contain w-full cursor-pointer"
 				draggable="false"
@@ -207,7 +213,7 @@
 			class="rounded transition duration-100 hover:bg-black/5"
 		>
 			<img
-				src="/pieces/w_n.svg"
+				src="/pieces/{colorFor.charAt(0)}_n.svg"
 				alt="Knight"
 				class="object-contain w-full cursor-pointer"
 				draggable="false"
@@ -220,7 +226,7 @@
 			class="rounded transition duration-100 hover:bg-black/5"
 		>
 			<img
-				src="/pieces/w_b.svg"
+				src="/pieces/{colorFor.charAt(0)}_b.svg"
 				alt="Bishop"
 				class="object-contain w-full cursor-pointer"
 				draggable="false"
@@ -233,7 +239,7 @@
 			class="rounded transition duration-100 hover:bg-black/5"
 		>
 			<img
-				src="/pieces/w_r.svg"
+				src="/pieces/{colorFor.charAt(0)}_r.svg"
 				alt="Rook"
 				class="object-contain w-full cursor-pointer"
 				draggable="false"

@@ -1,0 +1,22 @@
+{
+  "name": "conch",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/sujang958/conch",
+  "author": "sujang.958 <enter7377@naver.com>",
+  "license": "MIT",
+  "dependencies": {
+    "turbo": "^1.10.13"
+  },
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev --parallel",
+    "lint": "turbo lint"
+  },
+  "packageManager": "yarn@1.22.19"
+}
