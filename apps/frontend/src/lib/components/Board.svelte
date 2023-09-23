@@ -3,6 +3,7 @@
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
 	import { toReversed } from "../utils/toReversed"
+	import gsap from "gsap"
 
 	export let onMove: ((move: Move) => any) | null = null
 	export let afterMove: (...args: any[]) => any = () => {}
@@ -73,10 +74,13 @@
 		// Handling promotions
 		const [alpahbet, number] = targetSquare.id.trim().split("")
 		const rank = Number(number)
-		if (draggingPieceNotation == "P" && (rank == 8 || rank == 1)) {
+		if (
+			draggingPieceNotation == "P" &&
+			((game.turn() == "w" && rank == 8) || (game.turn() == "b" && rank == 1))
+		) {
 			const squaresFromBorderToTargetWindow = alpahbet.charCodeAt(0) - 97
 
-			console.log(squaresFromBorderToTargetWindow, rank)
+			// TODO: add promotions for black
 
 			if (rank == 8) promotionWindow.style.left = `min(${squaresFromBorderToTargetWindow}%, 75%)`
 			else promotionWindow.style.right = `max(${squaresFromBorderToTargetWindow}%, 12.5%)`
@@ -120,16 +124,41 @@
 		})
 	})
 
-	const finishPromoting = (promoteTo: string) => {
+	const finishPromoting = async (promoteTo: string) => {
 		if (!isPromoting) return
 
 		move.promotion = promoteTo.toLowerCase()
 
-		if (movePiece()) isPromoting = false
+		if (await movePiece()) isPromoting = false
 	}
 
-	const movePiece = (): boolean => {
+	const animate = async () => {
+		if (!draggingPiece?.parentElement?.id) return
+
+		const toSquare = document.getElementById(move.to)
+		if (!toSquare) return
+
+		const copiedPiece = draggingPiece.cloneNode(true) as HTMLImageElement
+
+		toSquare.appendChild(copiedPiece)
+
+		const yAmountToMove = copiedPiece.y - draggingPiece.y
+		const xAmountToMove = copiedPiece.x - draggingPiece.x
+
+		copiedPiece.remove()
+
+		// TODO: add options to disable this
+		await gsap.to(draggingPiece, { x: xAmountToMove, y: yAmountToMove, duration: 0.05 })
+	}
+
+	const movePiece = async (): Promise<boolean> => {
 		try {
+			const legalSquares = game
+				.moves({})
+				.map((move) => (typeof move == "string" ? move : move.after).replace(/[^a-z0-9]/g, ""))
+
+			if (legalSquares.includes(move.to)) await animate()
+
 			if (onMove) {
 				Promise.resolve(onMove(move)).then(() => {
 					board = game.board()
@@ -160,7 +189,6 @@
 	}
 
 	// TODO: sepearte into several file
-	// TODO: implement promotions for black
 
 	const getSquareNotation = ({
 		x,
@@ -282,6 +310,7 @@
 
 					const piece = square?.firstElementChild
 
+					// Click-to-move supports
 					if (
 						clickedPiece &&
 						isLegalSquare(
