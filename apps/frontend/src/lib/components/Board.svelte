@@ -3,7 +3,7 @@
 	import { Chess, type Color, type Square } from "chess.js"
 	import { onMount } from "svelte"
 	import { toReversed } from "../utils/toReversed"
-	import gsap from "gsap"
+	import gsap, { Linear } from "gsap"
 
 	export let onMove: ((move: Move) => any) | null = null
 	export let afterMove: (...args: any[]) => any = () => {}
@@ -142,20 +142,28 @@
 
 		toSquare.appendChild(copiedPiece)
 
+		// TODO: fix overmoving a lil bit when capturing
+
 		const yAmountToMove = copiedPiece.y - draggingPiece.y
 		const xAmountToMove = copiedPiece.x - draggingPiece.x
 
 		copiedPiece.remove()
 
 		// TODO: add options to disable this
-		await gsap.to(draggingPiece, { x: xAmountToMove, y: yAmountToMove, duration: 0.05 })
+		await gsap.to(draggingPiece, {
+			x: xAmountToMove,
+			y: yAmountToMove,
+			duration: 0.1
+		})
 	}
 
 	const movePiece = async (): Promise<boolean> => {
 		try {
 			const legalSquares = game
 				.moves({})
-				.map((move) => (typeof move == "string" ? move : move.after).replace(/[^a-z0-9]/g, ""))
+				.map((move) =>
+					(typeof move == "string" ? move : move.after).replace(/[^a-z0-9]/g, "").replace(/x/g, "")
+				)
 
 			if (legalSquares.includes(move.to)) await animate()
 
