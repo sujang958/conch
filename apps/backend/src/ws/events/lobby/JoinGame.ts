@@ -1,5 +1,5 @@
 import { EventFile, EventRes } from "../../../types/events.js"
-import { redisClient } from "../../../db/redis.js"
+import { isPlayerInQueue, redisClient } from "../../../db/redis.js"
 import { z } from "zod"
 import prisma from "../../../../prisma/prisma.js"
 import { individuals } from "../rooms.js"
@@ -21,6 +21,8 @@ const ELO_DEVIATION = 300
 const JoinGameEvent: EventFile = {
   name: "JOIN_GAME",
   execute: async ({ user, socket, ws }, arg) => {
+    // TODO: set으로 바꾼거 테스트
+
     if (!user) return
 
     const parsedArg = joinGameParam.safeParse(JSON.parse(arg))
@@ -47,19 +49,22 @@ const JoinGameEvent: EventFile = {
         } satisfies EventRes),
       )
 
-    const allQueues = await redisClient.keys("queue:*")
-    const searched = await Promise.all(
-      allQueues.map(async (queueId) => {
-        const queue = await redisClient.lrange(queueId, 0, -1)
-        return (
-          queue
-            .map((user) => user.trim().split(":")[0])
-            .findIndex((userId) => userId == user.id) < 0
-        )
-      }),
-    )
+    const timeKind = getTimeKind(parsedArg.data.time)
+    const eloPropertyName = getEloPropertyName(timeKind)
+    const userInfo = await prisma.user.findUnique({ where: { id: user.id } })
 
-    if (searched.includes(false))
+    if (!userInfo)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "You can't be found in the database",
+        } satisfies EventRes),
+      )
+
+    const formattedIdElo =
+      `${userInfo.id}:${userInfo[eloPropertyName]}` as const
+
+    if (await isPlayerInQueue(formattedIdElo))
       return socket.send(
         JSON.stringify({
           type: "ERROR",
@@ -69,21 +74,7 @@ const JoinGameEvent: EventFile = {
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
-    const [queue, userInfo] = await Promise.all([
-      redisClient.lrange(queueId, 0, -1),
-      prisma.user.findUnique({ where: { id: user.id } }),
-    ])
-
-    const timeKind = getTimeKind(parsedArg.data.time)
-    const eloPropertyName = getEloPropertyName(timeKind)
-
-    if (!userInfo)
-      return socket.send(
-        JSON.stringify({
-          type: "ERROR",
-          message: "You can't be found in the database",
-        } satisfies EventRes),
-      )
+    const queue = await redisClient.smembers(queueId)
 
     const users = queue
       .map((v) => v.replace(/ /gi, "").split(":"))
@@ -98,18 +89,14 @@ const JoinGameEvent: EventFile = {
       )
 
     if (availableUserIndex < 0) {
-      await redisClient.rpush(
-        queueId,
-        `${userInfo.id}:${userInfo[eloPropertyName]}`,
-      )
+      await redisClient.sadd(queueId, formattedIdElo)
 
       return true
     }
 
     const [availableUserId, _] = users[availableUserIndex]
 
-    await redisClient.lset(queueId, availableUserIndex, "DEL")
-    await redisClient.lrem(queueId, 0, "DEL")
+    await redisClient.srem(queueId, availableUserId)
 
     const gameId = await createGame({
       players: [user.id, availableUserId.toString()],
@@ -132,14 +119,14 @@ const JoinGameEvent: EventFile = {
       return socket.send(
         JSON.stringify({
           type: "ERROR",
-          message: "Players can't be found",
+          message: "One of the players disconnected",
         } satisfies EventRes),
       )
     if (!user1.OPEN || !user2.OPEN)
       return socket.send(
         JSON.stringify({
           type: "ERROR",
-          message: "One of the two players disconnected",
+          message: "One of the players disconnected",
         } satisfies EventRes),
       )
 
