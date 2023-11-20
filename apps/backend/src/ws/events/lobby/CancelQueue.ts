@@ -1,21 +1,30 @@
-import { redisClient } from "../../../db/redis.js"
-import { EventFile } from "../../../types/events.js"
+import { isPlayerInQueue, redisClient } from "../../../db/redis.js"
+import { EventFile, EventRes } from "../../../types/events.js"
 
 const CancelQueueEvent: EventFile = {
   name: "CANCEL_QUEUE",
   execute: async ({ socket, ws, user }, arg) => {
     if (!user) return
 
-    const queueKeys = await redisClient.keys("queue:*")
-    const queues: Array<[string, string[]]> = await Promise.all(
-      queueKeys.map(async (key) => [key, await redisClient.lrange(key, 0, -1)]),
-    )
+    const playersQueue = await isPlayerInQueue(user.id)
 
-    queues
-      .filter(([_, queue]) =>
-        queue.findIndex((player) => player.startsWith(user.id)) !== -1
+    if (!playersQueue)
+      return socket.send(
+        JSON.stringify({
+          type: "ERROR",
+          message: "You are not in a queue",
+        } satisfies EventRes),
       )
 
-      // TODO: wip
+    await redisClient.srem(playersQueue.queueId, user.id)
+
+    return socket.send(
+      JSON.stringify({
+        type: "QUEUE_CANCELED",
+        message: "Queue canceled",
+      } satisfies EventRes),
+    )
   },
 }
+
+export default CancelQueueEvent

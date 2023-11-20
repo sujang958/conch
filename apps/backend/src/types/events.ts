@@ -75,6 +75,10 @@ export const eventRes = z.union([
     accepted: z.boolean(),
   }),
   z.object({
+    type: z.literal("QUEUE_CANCELED"),
+    message: z.string(),
+  }),
+  z.object({
     type: z.literal("ERROR"),
     message: z.string(),
   }),

@@ -9,6 +9,7 @@ import {
   getTimeKind,
 } from "../../../db/games.js"
 import { search } from "node-emoji"
+import { User } from "@prisma/client"
 
 const joinGameParam = z.object({
   time: z.number({ description: "in seconds" }),
@@ -61,10 +62,7 @@ const JoinGameEvent: EventFile = {
         } satisfies EventRes),
       )
 
-    const formattedIdElo =
-      `${userInfo.id}:${userInfo[eloPropertyName]}` as const
-
-    if (await isPlayerInQueue(formattedIdElo))
+    if (await isPlayerInQueue(user.id))
       return socket.send(
         JSON.stringify({
           type: "ERROR",
@@ -74,32 +72,34 @@ const JoinGameEvent: EventFile = {
 
     const queueId = `queue:${parsedArg.data.time}:${parsedArg.data.increment}`
 
-    const queue = await redisClient.smembers(queueId)
+    const userIds = await redisClient.smembers(queueId)
 
-    const users = queue
-      .map((v) => v.replace(/ /gi, "").split(":"))
-      .map(([id, elo]) => [id, Number(elo)])
+    const users = await prisma.$transaction(
+      userIds.map((userId) =>
+        prisma.user.findUnique({ where: { id: userId } }),
+      ),
+    )
 
-    const availableUserIndex = users
-      .filter(([id, _]) => id !== userInfo.id)
-      .findIndex(
-        ([_, elo]) =>
-          userInfo[eloPropertyName] - ELO_DEVIATION <= Number(elo) &&
-          Number(elo) <= userInfo[eloPropertyName] + ELO_DEVIATION,
+    const availableUser = users
+      .filter((user): user is User => user !== null)
+      .find(
+        (user) =>
+          userInfo[eloPropertyName] - ELO_DEVIATION <=
+            Number(user[eloPropertyName]) &&
+          Number(user[eloPropertyName]) <=
+            userInfo[eloPropertyName] + ELO_DEVIATION,
       )
 
-    if (availableUserIndex < 0) {
-      await redisClient.sadd(queueId, formattedIdElo)
+    if (!availableUser) {
+      await redisClient.sadd(queueId, user.id)
 
       return true
     }
 
-    const [availableUserId, _] = users[availableUserIndex]
-
-    await redisClient.srem(queueId, availableUserId)
+    await redisClient.srem(queueId, availableUser.id)
 
     const gameId = await createGame({
-      players: [user.id, availableUserId.toString()],
+      players: [user.id, availableUser.id],
       increment: parsedArg.data.increment,
       time: parsedArg.data.time,
     })
@@ -113,7 +113,7 @@ const JoinGameEvent: EventFile = {
       )
 
     const user1 = individuals.get(user.id)
-    const user2 = individuals.get(availableUserId.toString())
+    const user2 = individuals.get(availableUser.id)
 
     if (!user1 || !user2)
       return socket.send(
