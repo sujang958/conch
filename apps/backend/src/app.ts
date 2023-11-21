@@ -50,6 +50,13 @@ fastify.register(cors, {
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
 })
 
+fastify.get("/test", async (req, reply) => {
+  reply.header("Access-Control-Allow-Origin", "*")
+  reply.header("Access-Control-Allow-Methods", "GET")
+
+  return reply.send({ hi: ":)" })
+})
+
 await setupGraphQL(fastify)
 
 const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
