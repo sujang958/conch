@@ -3,10 +3,13 @@ CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "picture" TEXT NOT NULL DEFAULT 'https://popcat.click/twitter-card.jpg',
     "bio" TEXT NOT NULL DEFAULT 'im a noob',
-    "elo" INTEGER NOT NULL DEFAULT 1200,
+    "bulletElo" INTEGER NOT NULL DEFAULT 1200,
+    "blitzElo" INTEGER NOT NULL DEFAULT 1200,
+    "rapidElo" INTEGER NOT NULL DEFAULT 1200,
+    "country" TEXT NOT NULL DEFAULT '🏁',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "name" TEXT NOT NULL DEFAULT 'unnamed',
+    "name" VARCHAR(50) NOT NULL DEFAULT 'unnamed',
     "email" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
