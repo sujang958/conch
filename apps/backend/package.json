@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "yarn build && node ./out/src/app.js",
-    "build": "tsc && cpy ./src/gql/schema.gql ./out/src/gql/ --flat",
+    "build": "yarn generate && tsc && cpy ./src/gql/schema.gql ./out/src/gql/ --flat",
     "dev": "yarn generate:gql && ts-node-esm src/app.ts",
     "generate": "yarn generate:db && yarn generate:gql",
     "generate:gql": "graphql-codegen --config codegen.yml",

@@ -31,6 +31,8 @@ if (!success) {
   process.exit(401)
 }
 
+console.log("[ALERT] Detected environment:", process.env.NODE_ENV)
+
 const PORT = Number(process.env.PORT)
 
 const fastify = Fastify({
@@ -42,7 +44,7 @@ fastify.register(setupWebsocket)
 fastify.register(cors, {
   origin:
     process.env.NODE_ENV === "production"
-      ? "https://conch.vercel.app"
+      ? "https://conch.sujang.xyz"
       : "http://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
