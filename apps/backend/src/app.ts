@@ -59,7 +59,7 @@ fastify.get("/test", async (req, reply) => {
 
 await setupGraphQL(fastify)
 
-const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
+const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT, host: "::",  })
 
 console.log(res)
 
