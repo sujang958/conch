@@ -2,7 +2,7 @@
 
 # Adjust NODE_VERSION as desired
 ARG NODE_VERSION=18.17.1
-FROM node:${NODE_VERSION}-slim as base
+FROM node:${NODE_VERSION}-alpine as base
 
 LABEL fly_launch_runtime="Node.js"
 
@@ -19,8 +19,8 @@ RUN npm install -g yarn@$YARN_VERSION --force
 FROM base as build
 
 # Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install -y openssl build-essential pkg-config python-is-python3
+# RUN apt-get update -qq && \
+#    apt-get install -y libssl-dev openssl libpq-dev build-essential pkg-config python-is-python3
 
 # Install node modules
 # COPY --link package.json yarn.lock apps/* ./
