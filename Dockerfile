@@ -20,17 +20,18 @@ FROM base as build
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
-    apt-get install -y build-essential pkg-config python-is-python3
+    apt-get install -y openssl build-essential pkg-config python-is-python3
 
 # Install node modules
-COPY --link package.json yarn.lock ./
+# COPY --link package.json yarn.lock apps/* ./
+COPY --link . .
 RUN yarn install --frozen-lockfile --production=false
 
 # Copy application code
-COPY --link . .
+# COPY --link . .
 
 # Build application
-RUN yarn run build
+RUN yarn run build:backend
 
 # Remove development dependencies
 RUN yarn install --production=true
@@ -44,4 +45,4 @@ COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD [ "yarn", "start:backend" ]
+CMD [ "yarn", "start:backend:nobuild" ]
