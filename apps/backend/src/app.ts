@@ -12,6 +12,7 @@ const envSchema = z.object({
   REDIS_URL: z.string(),
   DB_URL: z.string(),
   JWT_SECRET: z.string(),
+  FIREBASE_ACCOUNT: z.string(),
 })
 
 type EnvType = z.infer<typeof envSchema>
