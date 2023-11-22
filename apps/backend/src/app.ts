@@ -34,7 +34,7 @@ if (!success) {
 
 console.log("[ALERT] Detected environment:", process.env.NODE_ENV)
 
-// const PORT = Number(process.env.PORT)
+const PORT = Number(process.env.PORT)
 
 const fastify = Fastify({
   logger: true,
@@ -60,18 +60,13 @@ fastify.get("/test", async (req, reply) => {
 
 await setupGraphQL(fastify)
 
-export default async (req: any, res: any) => {
-  await fastify.ready()
-  fastify.server.emit("request", req, res)
-}
+const res = await fastify.listen({
+  port: isNaN(PORT) ? 3000 : PORT,
+  host: "::",
+})
 
-// const res = await fastify.listen({
-//   port: isNaN(PORT) ? 3000 : PORT,
-//   host: "::",
-// })
+console.log(res)
 
-// console.log(res)
-
-// process.on("uncaughtException", (error) => {
-//   console.log(error)
-// })
+process.on("uncaughtException", (error) => {
+  console.log(error)
+})
