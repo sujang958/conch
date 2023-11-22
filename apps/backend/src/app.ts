@@ -5,14 +5,13 @@ import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
 import cors from "@fastify/cors"
 import { z } from "zod"
-import prisma from "../prisma/prisma.js"
 
 const envSchema = z.object({
   NODE_ENV: z.union([z.literal("development"), z.literal("production")]),
   REDIS_URL: z.string(),
   DB_URL: z.string(),
   JWT_SECRET: z.string(),
-  FIREBASE_ACCOUNT: z.string(),
+  // FIREBASE_ACCOUNT: z.string(),
 })
 
 type EnvType = z.infer<typeof envSchema>

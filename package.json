@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/sujang958/conch",
-  "author": "sujang.958 <enter7377@naver.com>",
+  "author": "sujang958 <enter7377@naver.com>",
   "license": "MIT",
   "dependencies": {
     "chess.js": "^1.0.0-beta.6",
@@ -16,12 +16,15 @@
     "packages/*"
   ],
   "scripts": {
+    "start:backend": "turbo build && node apps/backend/out/src/app.js",
     "build": "turbo build",
+    "build:backend": "turbo build --filter backend",
     "dev": "turbo dev --parallel",
     "lint": "turbo lint"
   },
   "packageManager": "yarn@1.22.19",
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.4.11",
     "prettier": "2"
   }
 }

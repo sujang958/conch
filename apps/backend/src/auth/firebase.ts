@@ -1,10 +1,8 @@
 import admin, { ServiceAccount } from "firebase-admin"
-// import account from "../../account.secret.json" assert { type: "json" }
+import account from "../../account.secret.json" assert { type: "json" }
 
 const app = admin.initializeApp({
-  credential: admin.credential.cert(
-    JSON.parse(process.env.FIREBASE_ACCOUNT) as ServiceAccount,
-  ),
+  credential: admin.credential.cert(account as ServiceAccount),
 })
 
 const auth = app.auth()
