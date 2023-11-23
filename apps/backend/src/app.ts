@@ -9,9 +9,9 @@ import { z } from "zod"
 const envSchema = z.object({
   NODE_ENV: z.union([z.literal("development"), z.literal("production")]),
   REDIS_URL: z.string(),
+  REDIS_PW: z.string(),
   DB_URL: z.string(),
   JWT_SECRET: z.string(),
-  // FIREBASE_ACCOUNT: z.string(),
 })
 
 type EnvType = z.infer<typeof envSchema>
