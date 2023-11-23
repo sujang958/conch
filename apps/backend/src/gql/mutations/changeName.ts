@@ -4,7 +4,7 @@ import { userAction } from "../actions.js"
 export const changeName = userAction(async (user, { name: _name }) => {
   const name = String(_name).trim()
 
-  if (name.length > 50) return null
+  if (name.length > 50) throw new Error("Name must be shorter than 50")
 
   return await prisma.user.update({
     where: {

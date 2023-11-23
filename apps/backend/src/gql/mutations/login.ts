@@ -39,7 +39,7 @@ export const login = publicAction<UserWithGamesWithUsers>(
 
     ctx.reply.header(
       "Set-Cookie",
-      `token=${encodeURIComponent(token)}; HttpOnly`,
+      `token=${encodeURIComponent(token)}; HttpOnly; SameSite=None`,
     )
 
     return user
