@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { auth } from "$lib/auth/firebase"
-	import { user, userSchema, userSchemaWithoutGames, type UserType } from "$lib/stores/user"
+	import { user, userSchemaWithoutGames, type UserWithoutGamesType } from "$lib/stores/user"
 	import { graphQLClient } from "$lib/utils/graphql"
 	import type { TypedDocumentNode } from "@graphql-typed-document-node/core"
-	import { parse, type TypedQueryDocumentNode } from "graphql"
+	import { parse } from "graphql"
 	import { gql } from "graphql-request"
 	import { onMount } from "svelte"
 	import toast from "svelte-french-toast"
@@ -22,22 +22,24 @@
 		changedName = $user.name
 	})
 
-	const changeNameMutation: TypedDocumentNode<{ changeName: UserType | null }, { name: string }> =
-		parse(gql`
-			mutation changeName($name: String!) {
-				changeName(name: $name) {
-					id
-					name
-					picture
-					bio
-					bulletElo
-					rapidElo
-					blitzElo
-					createdAt
-					country
-				}
+	const changeNameMutation: TypedDocumentNode<
+		{ changeName: UserWithoutGamesType | null },
+		{ name: string }
+	> = parse(gql`
+		mutation changeName($name: String!) {
+			changeName(name: $name) {
+				id
+				name
+				picture
+				bio
+				bulletElo
+				rapidElo
+				blitzElo
+				createdAt
+				country
 			}
-		`)
+		}
+	`)
 
 	const changeName = async (name: string) => {
 		const res = await graphQLClient.request(changeNameMutation, { name })
@@ -67,6 +69,7 @@
 					type="text"
 					class="mt-0.5 w-full bg-neutral-950 border-neutral-800 rounded-lg px-2 py-1"
 					placeholder="unnamed"
+					maxlength="50"
 					bind:value={changedName}
 				/>
 			</label>
@@ -76,7 +79,7 @@
 					type="button"
 					on:click={() =>
 						toast.promise(changeName(changedName), {
-							error: (e) => e,
+							error: (e) => String(e),
 							loading: "Loading",
 							success: "Successfully changed your name"
 						})}
