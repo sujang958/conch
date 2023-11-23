@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { gql } from "graphql-request"
 	import { graphQLClient } from "../utils/graphql"
-	import { number, object, parse, string, type Output, safeParse } from "valibot"
+	import { number, object, string, type Output, safeParse } from "valibot"
+	import { user as me } from "$lib/stores/user"
 	import toast from "svelte-french-toast"
 
 	export let userId = ""
@@ -29,16 +30,18 @@
 		}
 	`
 
-	graphQLClient.request(userQuery, { id: userId }).then((res) => {
-		if (!res) return
-		if (typeof res !== "object") return
-		if (!("user" in res)) return // TODO: show some error typa shits
+	if (userId.trim().length <= 0 && $me && $me !== "LOADING") user = $me
+	else
+		graphQLClient.request(userQuery, { id: userId }).then((res) => {
+			if (!res) return
+			if (typeof res !== "object") return
+			if (!("user" in res)) return // TODO: show some error typa shits
 
-		const parsedRes = safeParse(partialUserSchema, res.user)
-		if (!parsedRes.success) return toast.error("Error while fetching the user")
+			const parsedRes = safeParse(partialUserSchema, res.user)
+			if (!parsedRes.success) return toast.error("Error while fetching the user")
 
-		user = parsedRes.data
-	})
+			user = parsedRes.data
+		})
 </script>
 
 {#if user}
@@ -58,4 +61,19 @@
 		</div>
 		<slot />
 	</div>
+{:else}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		fill="none"
+		viewBox="0 0 24 24"
+		stroke-width="1.5"
+		stroke="currentColor"
+		class="w-6 h-6 animate-spin stroke-white"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+		/>
+	</svg>
 {/if}

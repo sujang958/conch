@@ -1,7 +1,5 @@
-import vegot from "vegot"
 import prisma from "../../../prisma/prisma.js"
 import { UserWithGamesWithUsers } from "../../__generated__/resolvers-types.js"
-import { User } from "../../__generated__/resolvers-types.js"
 import { verifyIdToken } from "../../auth/firebase.js"
 import { sign } from "../../auth/jwt.js"
 import { publicAction } from "../actions.js"
@@ -28,7 +26,7 @@ export const login = publicAction<UserWithGamesWithUsers>(
       update: {},
       create: {
         email,
-        country: find(json?.country?.toLowerCase() ?? "rainbow")?.emoji,
+        country: find(json?.country?.toLowerCase() ?? "")?.emoji,
       },
       include: {
         blackGames: { include: { winner: true, black: true, white: true } },
