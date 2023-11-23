@@ -8,7 +8,6 @@ import {
   getEloPropertyName,
   getTimeKind,
 } from "../../../db/games.js"
-import { search } from "node-emoji"
 import { User } from "@prisma/client"
 
 const joinGameParam = z.object({
