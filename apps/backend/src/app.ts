@@ -5,11 +5,11 @@ import setupGraphQL from "./gql/index.js"
 import { config } from "dotenv"
 import cors from "@fastify/cors"
 import { z } from "zod"
-import prisma from "../prisma/prisma.js"
 
 const envSchema = z.object({
   NODE_ENV: z.union([z.literal("development"), z.literal("production")]),
   REDIS_URL: z.string(),
+  REDIS_PW: z.string(),
   DB_URL: z.string(),
   JWT_SECRET: z.string(),
 })
@@ -31,6 +31,8 @@ if (!success) {
   process.exit(401)
 }
 
+console.log("[ALERT] Detected environment:", process.env.NODE_ENV)
+
 const PORT = Number(process.env.PORT)
 
 const fastify = Fastify({
@@ -42,15 +44,25 @@ fastify.register(setupWebsocket)
 fastify.register(cors, {
   origin:
     process.env.NODE_ENV === "production"
-      ? "https://conch.vercel.app"
+      ? "https://conch.sujang.xyz"
       : "http://localhost:5173",
   credentials: true,
   methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
 })
 
+fastify.get("/test", async (req, reply) => {
+  reply.header("Access-Control-Allow-Origin", "*")
+  reply.header("Access-Control-Allow-Methods", "GET")
+
+  return reply.send({ hi: ":)" })
+})
+
 await setupGraphQL(fastify)
 
-const res = await fastify.listen({ port: isNaN(PORT) ? 3000 : PORT })
+const res = await fastify.listen({
+  port: isNaN(PORT) ? 3000 : PORT,
+  host: "::",
+})
 
 console.log(res)
 

@@ -3,7 +3,9 @@ import { Redis } from "ioredis"
 
 config()
 
-export const redisClient = new Redis(process.env.REDIS_URL ?? "")
+export const redisClient = new Redis(process.env.REDIS_URL ?? "", {
+  password: process.env.REDIS_PW,
+})
 
 export const isPlayerInQueue = async (id: `${string}:${string}` | string) => {
   const allQueues = await redisClient.keys("queue:*")

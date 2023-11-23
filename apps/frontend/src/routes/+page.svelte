@@ -165,9 +165,9 @@
 				<p class="text-2xl font-semibold">Loading</p>
 			</div>
 		{:else}
-			<div class="w-full h-full flex flex-col justify-center items-center gap-y-2">
+			<div class="w-full h-full flex flex-col justify-center items-center text-center gap-y-2">
 				<p class="text-2xl font-semibold">You're not logged in</p>
-				<p class="text-base text-neutral-400">You should log in to play games</p>
+				<p class="text-base text-neutral-400">You must log in to play games</p>
 				<a href="/auth/login" class="bg-white text-black rounded-lg px-4 py-1 font-semibold mt-3"
 					>Login</a
 				>
