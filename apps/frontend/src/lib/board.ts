@@ -28,3 +28,11 @@ export const getTimeKind = (time: number) => {
 	else if (time >= 180 && time < 60 * 10) return "blitz"
 	else return "rapid"
 }
+
+export const pgnToList = (pgn: string) => {
+	const board = new Chess()
+
+	board.loadPgn(pgn)
+
+	return board.history()
+}

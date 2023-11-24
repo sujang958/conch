@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/stores"
 	import { PUBLIC_WS_URL } from "$env/static/public"
-	import { getTimeKind } from "$lib/board"
+	import { getTimeKind, pgnToList } from "$lib/board"
 	import Board from "$lib/components/Board.svelte"
 	import GameOverModal from "$lib/components/GameOverModal.svelte"
 	import PlayerCard from "$lib/components/PlayerCard.svelte"
@@ -111,7 +111,7 @@
 				}
 
 				board = game.board()
-				history = game.history()
+				history = pgnToList(event.pgn)
 				break
 			case "GAME_END":
 				playSound(endAudio)
