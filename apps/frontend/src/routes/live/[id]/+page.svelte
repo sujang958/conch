@@ -137,7 +137,7 @@
 	}
 
 	onMount(() => {
-		ws = new WebSocket(`${PUBLIC_WS_URL}/ws/game`)
+		ws = new WebSocket(`${PUBLIC_WS_URL}/game`)
 
 		ws.addEventListener("message", onWSMessage)
 		ws.addEventListener("open", onWSOpen)
