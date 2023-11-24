@@ -162,9 +162,9 @@
 		let newGames: GameWithOnlyUsersName[] = []
 
 		if (selectedCategories.has("WHITE")) newGames = fetchedUser.whiteGames
-		else if (selectedCategories.has("BLACK")) newGames = [...newGames, ...fetchedUser.blackGames]
-		else if (selectedCategories.has("WON")) newGames = [...newGames, ...fetchedUser.wonGames]
-		else if (selectedCategories.size <= 0)
+		if (selectedCategories.has("BLACK")) newGames = [...newGames, ...fetchedUser.blackGames]
+		if (selectedCategories.has("WON")) newGames = [...newGames, ...fetchedUser.wonGames]
+		if (selectedCategories.size <= 0)
 			newGames = [...fetchedUser.whiteGames, ...fetchedUser.blackGames, ...fetchedUser.wonGames]
 
 		// TODO: fix being sorted wrongly sometimes
