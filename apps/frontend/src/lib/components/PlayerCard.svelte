@@ -6,7 +6,7 @@
 	import toast from "svelte-french-toast"
 
 	export let userId = ""
-	export let displayingElo: "blitz" | "rapid" | "bullet" = "blitz"
+	export let displayingElo: "blitz" | "rapid" | "bullet" | "none" = "blitz"
 
 	const partialUserSchema = object({
 		name: string(),
@@ -30,7 +30,11 @@
 		}
 	`
 
-	if (userId.trim().length <= 0 && $me && $me !== "LOADING") user = $me
+	if (
+		(userId.trim().length <= 0 && $me && $me !== "LOADING") ||
+		($me !== "LOADING" && userId.trim() == $me?.id)
+	)
+		user = $me
 	else
 		graphQLClient.request(userQuery, { id: userId }).then((res) => {
 			if (!res) return
@@ -54,26 +58,13 @@
 				draggable="false"
 			/>
 			<p class="font-medium text-lg">
-				{user.name} &nbsp;<span class="text-neutral-400 text-xs"
-					>({user[`${displayingElo}Elo`]})</span
-				>
+				{user.name} &nbsp; {#if displayingElo !== "none"}
+					<span class="text-neutral-400 text-xs">({user[`${displayingElo}Elo`]})</span>
+				{/if}
 			</p>
 		</div>
 		<slot />
 	{:else}
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			fill="none"
-			viewBox="0 0 24 24"
-			stroke-width="1.5"
-			stroke="currentColor"
-			class="w-3 h-3 animate-spin stroke-neutral-300 justify-self-center self-center"
-		>
-			<path
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-			/>
-		</svg>
+		<!-- TODO: add some cool loading shit -->
 	{/if}
 </div>

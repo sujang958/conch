@@ -109,7 +109,7 @@
 					>PLAY</button
 				>
 			</div>
-			<PlayerCard userId={$user.id}>
+			<PlayerCard userId={$user.id} displayingElo="none">
 				<div class="flex flex-row items-center gap-x-3">
 					<button
 						type="button"
