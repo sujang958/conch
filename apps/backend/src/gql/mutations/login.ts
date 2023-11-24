@@ -44,6 +44,8 @@ export const login = publicAction<UserWithGamesWithUsers>(
       }`,
     )
 
+    // TODO: queue 타입 sadd했는데도 자꾸 list로 잡히는거 고치기
+
     return user
   },
 )

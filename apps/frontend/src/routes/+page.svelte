@@ -59,10 +59,10 @@
 	{#if isGameOver && gameResult}
 		<div class="fixed inset-0 grid place-items-center z-50">
 			<div
-				class="rounded-lg text-black bg-white py-5 px-7 flex flex-col items-center justify-between"
+				class="rounded-lg text-black bg-white py-4 px-7 flex flex-col items-center justify-between"
 			>
 				<p class="text-3xl font-bold">{gameResult}</p>
-				<p class="text-base text-neutral-700">{gameOverReason}</p>
+				<p class="text-base text-neutral-700">by {gameOverReason}</p>
 				<div class="py-3" />
 				<div class="flex flex-row items-center justify-evenly gap-x-3">
 					<button
