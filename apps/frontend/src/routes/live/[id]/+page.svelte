@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { goto } from "$app/navigation"
 	import { page } from "$app/stores"
 	import { PUBLIC_WS_URL } from "$env/static/public"
 	import { getTimeKind } from "$lib/board"
 	import Board from "$lib/components/Board.svelte"
 	import GameOverModal from "$lib/components/GameOverModal.svelte"
 	import PlayerCard from "$lib/components/PlayerCard.svelte"
-	import { user } from "$lib/stores/user"
 	import { joinNewGame } from "$lib/ws"
 	import { Chess } from "chess.js"
 	import { onDestroy, onMount } from "svelte"
@@ -139,7 +137,7 @@
 	}
 
 	onMount(() => {
-		ws = new WebSocket("ws://localhost:3000/ws/game")
+		ws = new WebSocket(`${PUBLIC_WS_URL}/ws/game`)
 
 		ws.addEventListener("message", onWSMessage)
 		ws.addEventListener("open", onWSOpen)
