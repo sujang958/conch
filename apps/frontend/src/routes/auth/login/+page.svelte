@@ -30,9 +30,9 @@
 					case "auth/account-exists-with-different-credential" || "auth/email-already-in-use":
 						throw new Error("This email is already in use")
 					case "auth/network-request-failed":
-						return "Invalid network"
+						throw new Error("Invalid network")
 					case "auth/invalid-email":
-						return "Invalid email"
+						throw new Error("Invalid email")
 					default:
 						throw new Error("Something went wrong")
 				}
