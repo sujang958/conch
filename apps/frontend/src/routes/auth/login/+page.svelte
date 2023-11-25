@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation"
 	import { auth, githubProvider, googleProvider } from "$lib/auth/firebase"
 	import { user } from "$lib/stores/user"
+	import { FirebaseError } from "firebase/app"
 	import { signInWithPopup } from "firebase/auth"
 	import toast from "svelte-french-toast"
 
@@ -17,11 +18,26 @@
 	}
 
 	const login = async (method: "GOOGLE" | "GITHUB") => {
-		const provider = method == "GOOGLE" ? googleProvider : githubProvider
+		try {
+			const provider = method == "GOOGLE" ? googleProvider : githubProvider
 
-		await signInWithPopup(auth, provider)
+			await signInWithPopup(auth, provider)
 
-		checkUser()
+			checkUser()
+		} catch (e) {
+			if (e instanceof FirebaseError) {
+				switch (e.code) {
+					case "auth/account-exists-with-different-credential" || "auth/email-already-in-use":
+						throw new Error("This email is already in use")
+					case "auth/network-request-failed":
+						return "Invalid network"
+					case "auth/invalid-email":
+						return "Invalid email"
+					default:
+						throw new Error("Something went wrong")
+				}
+			}
+		}
 	}
 </script>
 
@@ -79,7 +95,12 @@
 				>
 				<button
 					type="button"
-					on:click={login.bind(null, "GITHUB")}
+					on:click={() =>
+						toast.promise(login("GITHUB"), {
+							error: (err) => err,
+							loading: "Handling login",
+							success: "Successfully logged in!"
+						})}
 					class="bg-neutral-900 text-white rounded-lg w-full py-2 font-semibold text-sm flex flex-row items-center justify-center gap-x-2"
 					><svg
 						xmlns="http://www.w3.org/2000/svg"
